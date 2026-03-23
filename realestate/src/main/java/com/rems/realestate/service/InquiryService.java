@@ -21,7 +21,10 @@ public class InquiryService {
     @Autowired
     private PropertyRepository propertyRepository;
 
-    public Inquiry createInquiry(String propertyId, String message, String senderId) {
+    @Autowired
+    private NotificationService notificationService;
+
+    public Inquiry createInquiry(String propertyId, String message, String senderId, boolean acceptedRentalRules) {
         Property property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new RuntimeException("Property not found"));
 
@@ -33,15 +36,30 @@ public class InquiryService {
             throw new RuntimeException("Cannot inquire on a property that is not APPROVED.");
         }
 
+        if (property.getPurpose() == com.rems.realestate.model.PropertyPurpose.RENT && property.getRentalRules() != null
+                && !property.getRentalRules().isEmpty()) {
+            if (!acceptedRentalRules) {
+                throw new RuntimeException("You must accept the rental rules to proceed.");
+            }
+        }
+
         Inquiry inquiry = Inquiry.builder()
                 .propertyId(propertyId)
                 .ownerId(property.getOwnerId())
                 .senderId(senderId)
                 .message(message)
+                .acceptedRentalRules(acceptedRentalRules)
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        return inquiryRepository.save(inquiry);
+        Inquiry savedInquiry = inquiryRepository.save(inquiry);
+
+        notificationService.createNotification(
+                property.getOwnerId(),
+                "System Notice: New inquiry received for your property '" + property.getTitle() + "'.",
+                "INQUIRY");
+
+        return savedInquiry;
     }
 
     public List<Inquiry> getOwnerInquiries(String ownerId) {

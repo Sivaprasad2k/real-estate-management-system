@@ -13,6 +13,8 @@ const AdminDashboard = () => {
     const [properties, setProperties] = useState([]);
     const [usersList, setUsersList] = useState([]);
     const [tickets, setTickets] = useState([]);
+    const [maintenanceAnalytics, setMaintenanceAnalytics] = useState(null);
+    const [suspiciousLogs, setSuspiciousLogs] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
 
     // Form State for Maintenance Staff
@@ -39,6 +41,11 @@ const AdminDashboard = () => {
             } else if (activeTab === 'maintenance') {
                 const res = await api.get('/admin/maintenance');
                 setTickets(res.data);
+                const anaRes = await api.get('/admin/maintenance/analytics');
+                setMaintenanceAnalytics(anaRes.data);
+            } else if (activeTab === 'fraud') {
+                const res = await api.get('/admin/suspicious-logs');
+                setSuspiciousLogs(res.data);
             }
         } catch (err) {
             console.error("Failed to load admin data", err);
@@ -106,24 +113,23 @@ const AdminDashboard = () => {
 
     return (
         <div className="flex gap-8 min-h-[calc(100vh-8rem)]">
-            <aside className="w-[240px] shrink-0">
-                <div className="bg-dark/40 backdrop-blur-md rounded-xl border border-dark-border p-5 sticky top-28">
-                    <h3 className="text-gray-500 font-bold mb-4 ml-2 uppercase text-[11px] tracking-widest">Admin Controls</h3>
-                    <ul className="space-y-1 font-medium text-[14px]">
+            <aside className="w-[260px] shrink-0">
+                <div className="bg-dark-card rounded-xl shadow-md p-5 sticky top-28 border border-dark-border flex flex-col min-h-[calc(100vh-8rem)]">
+                    <ul className="space-y-4 font-medium flex-1">
                         <li>
                             <button
                                 onClick={() => setActiveTab('overview')}
-                                className={`w-full text-left px-4 py-2.5 rounded-md transition-colors ${activeTab === 'overview' ? 'bg-brand-400/10 text-brand-400 border-l-2 border-brand-400' : 'text-gray-400 hover:bg-dark/50 hover:text-brand-300 border-l-2 border-transparent'}`}
+                                className={`w-full text-left px-5 py-3 rounded-lg transition-colors tracking-wide ${activeTab === 'overview' ? 'bg-brand-400/10 text-brand-400 border-l-4 border-brand-400' : 'text-gray-300 hover:bg-dark border-l-4 border-transparent hover:text-brand-300'}`}
                             >
-                                System Overview
+                                Overview
                             </button>
                         </li>
                         <li>
                             <button
                                 onClick={() => setActiveTab('properties')}
-                                className={`w-full text-left px-4 py-2.5 rounded-md transition-colors flex justify-between items-center ${activeTab === 'properties' ? 'bg-brand-400/10 text-brand-400 border-l-2 border-brand-400' : 'text-gray-400 hover:bg-dark/50 hover:text-brand-300 border-l-2 border-transparent'}`}
+                                className={`w-full text-left px-5 py-3 rounded-lg transition-colors tracking-wide flex justify-between items-center ${activeTab === 'properties' ? 'bg-brand-400/10 text-brand-400 border-l-4 border-brand-400' : 'text-gray-300 hover:bg-dark border-l-4 border-transparent hover:text-brand-300'}`}
                             >
-                                Global Properties
+                                Properties
                                 {stats.activeReports > 0 && activeTab !== 'properties' && (
                                     <span className="bg-red-900/60 border border-red-500/30 text-red-200 text-[10px] px-2 py-0.5 rounded-sm">{stats.activeReports}</span>
                                 )}
@@ -132,17 +138,25 @@ const AdminDashboard = () => {
                         <li>
                             <button
                                 onClick={() => setActiveTab('maintenance')}
-                                className={`w-full text-left px-4 py-2.5 rounded-md transition-colors ${activeTab === 'maintenance' ? 'bg-brand-400/10 text-brand-400 border-l-2 border-brand-400' : 'text-gray-400 hover:bg-dark/50 hover:text-brand-300 border-l-2 border-transparent'}`}
+                                className={`w-full text-left px-5 py-3 rounded-lg transition-colors tracking-wide ${activeTab === 'maintenance' ? 'bg-brand-400/10 text-brand-400 border-l-4 border-brand-400' : 'text-gray-300 hover:bg-dark border-l-4 border-transparent hover:text-brand-300'}`}
                             >
-                                Maintenance Details
+                                Maintenance
                             </button>
                         </li>
                         <li>
                             <button
                                 onClick={() => setActiveTab('users')}
-                                className={`w-full text-left px-4 py-2.5 rounded-md transition-colors ${activeTab === 'users' ? 'bg-brand-400/10 text-brand-400 border-l-2 border-brand-400' : 'text-gray-400 hover:bg-dark/50 hover:text-brand-300 border-l-2 border-transparent'}`}
+                                className={`w-full text-left px-5 py-3 rounded-lg transition-colors tracking-wide ${activeTab === 'users' ? 'bg-brand-400/10 text-brand-400 border-l-4 border-brand-400' : 'text-gray-300 hover:bg-dark border-l-4 border-transparent hover:text-brand-300'}`}
                             >
-                                User Management
+                                Users
+                            </button>
+                        </li>
+                        <li>
+                            <button
+                                onClick={() => setActiveTab('fraud')}
+                                className={`w-full text-left px-5 py-3 rounded-lg transition-colors tracking-wide ${activeTab === 'fraud' ? 'bg-brand-400/10 text-brand-400 border-l-4 border-brand-400' : 'text-gray-300 hover:bg-dark border-l-4 border-transparent hover:text-brand-300'}`}
+                            >
+                                Security Logs
                             </button>
                         </li>
                     </ul>
@@ -161,21 +175,21 @@ const AdminDashboard = () => {
                         {/* Overview Tab */}
                         {activeTab === 'overview' && (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">
-                                <div className="bg-dark/40 border border-dark-border rounded-md p-6 shadow-lg backdrop-blur-sm">
-                                    <h3 className="text-gray-500 text-[11px] uppercase tracking-widest font-bold mb-2">Total Users</h3>
-                                    <p className="text-4xl font-serif text-white">{stats.totalUsers}</p>
+                                <div className="bg-dark-card border border-dark-border rounded-xl p-6 shadow-md transition-all duration-300 hover:shadow-xl group">
+                                    <h3 className="text-gray-400 text-sm font-medium tracking-wide mb-2 uppercase">Total Users</h3>
+                                    <p className="text-4xl font-serif text-white group-hover:text-brand-300 transition-colors">{stats.totalUsers}</p>
                                 </div>
-                                <div className="bg-dark/40 border border-dark-border rounded-md p-6 shadow-lg backdrop-blur-sm">
-                                    <h3 className="text-gray-500 text-[11px] uppercase tracking-widest font-bold mb-2">Total Properties</h3>
-                                    <p className="text-4xl font-serif text-brand-400">{stats.totalProperties}</p>
+                                <div className="bg-dark-card border border-dark-border rounded-xl p-6 shadow-md transition-all duration-300 hover:shadow-xl group">
+                                    <h3 className="text-gray-400 text-sm font-medium tracking-wide mb-2 uppercase">Total Properties</h3>
+                                    <p className="text-4xl font-serif text-brand-400 group-hover:text-brand-300 transition-colors">{stats.totalProperties}</p>
                                 </div>
-                                <div className="bg-dark/40 border border-red-900/30 rounded-md p-6 shadow-lg backdrop-blur-sm">
-                                    <h3 className="text-red-500/80 text-[11px] uppercase tracking-widest font-bold mb-2">Active Reports</h3>
-                                    <p className="text-4xl font-serif text-red-400">{stats.activeReports}</p>
+                                <div className="bg-dark-card border border-red-900/30 rounded-xl p-6 shadow-md transition-all duration-300 hover:shadow-xl group">
+                                    <h3 className="text-red-400/80 text-sm font-medium tracking-wide mb-2 uppercase">Active Reports</h3>
+                                    <p className="text-4xl font-serif text-red-500 group-hover:text-red-400 transition-colors">{stats.activeReports}</p>
                                 </div>
-                                <div className="bg-dark/40 border border-dark-border rounded-md p-6 shadow-lg backdrop-blur-sm">
-                                    <h3 className="text-gray-500 text-[11px] uppercase tracking-widest font-bold mb-2">Maintenance Tickets</h3>
-                                    <p className="text-4xl font-serif text-gray-300">{stats.activeTickets}</p>
+                                <div className="bg-dark-card border border-dark-border rounded-xl p-6 shadow-md transition-all duration-300 hover:shadow-xl group">
+                                    <h3 className="text-gray-400 text-sm font-medium tracking-wide mb-2 uppercase">Maintenance Tickets</h3>
+                                    <p className="text-4xl font-serif text-gray-300 group-hover:text-brand-300 transition-colors">{stats.activeTickets}</p>
                                 </div>
                             </div>
                         )}
@@ -193,29 +207,29 @@ const AdminDashboard = () => {
                                 ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         {properties.map(property => (
-                                            <div key={property.id} className={`bg-dark/40 backdrop-blur-sm rounded-md shadow-lg overflow-hidden border flex flex-col ${property.reportCount > 0 ? 'border-red-900/50' : 'border-dark-border'}`}>
-                                                <div className="h-48 relative">
+                                            <div key={property.id} className={`bg-dark-card rounded-md shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border flex flex-col group ${property.reportCount > 0 ? 'border-red-900/50' : 'border-dark-border'}`}>
+                                                <div className="h-56 relative shrink-0 overflow-hidden bg-[#111]">
                                                     {property.images && property.images.length > 0 ? (
-                                                        <img src={property.images[0]} alt={property.title} className="w-full h-full object-cover opacity-80" />
+                                                        <img src={property.images[0]} alt={property.title} className="w-full h-full object-cover" />
                                                     ) : (
-                                                        <div className="bg-[#111] w-full h-full flex items-center justify-center text-gray-500 font-light text-xs tracking-widest">[NO IMAGE]</div>
+                                                        <div className="absolute inset-0 flex items-center justify-center text-gray-500 font-light text-sm bg-gradient-to-b from-transparent to-[#111]/50 tracking-widest">[IMAGE PLACEHOLDER]</div>
                                                     )}
                                                     {property.reportCount > 0 && (
-                                                        <span className="absolute top-3 right-3 bg-red-900/60 text-red-200 border border-red-500/30 backdrop-blur-md px-3 py-1 rounded-sm text-[10px] uppercase font-semibold tracking-wider animate-pulse">
+                                                        <span className="absolute top-4 right-4 bg-red-900/60 text-red-200 border border-red-500/30 backdrop-blur-md px-3 py-1 rounded-sm text-[10px] uppercase font-semibold tracking-wider animate-pulse">
                                                             FLAGGED: {property.reportCount} Reports
                                                         </span>
                                                     )}
                                                     {property.status && (
-                                                        <span className="absolute bottom-3 left-3 bg-dark/60 backdrop-blur-md border border-gray-600/50 text-gray-300 px-3 py-1 rounded-sm text-[10px] font-semibold uppercase tracking-wider">
+                                                        <span className="absolute top-4 left-4 bg-dark/60 backdrop-blur-md border border-gray-600/50 text-gray-300 px-3 py-1 rounded-sm text-[10px] font-semibold uppercase tracking-wider">
                                                             {property.status}
                                                         </span>
                                                     )}
                                                 </div>
-                                                <div className="p-6 flex-1 flex flex-col">
-                                                    <h3 className="text-xl font-serif text-brand-400 mb-2 line-clamp-1">{property.title}</h3>
-                                                    <p className="text-sm text-gray-400 mb-6 line-clamp-2 leading-relaxed font-light">{property.description}</p>
+                                                <div className="p-6 flex-1 flex flex-col relative">
+                                                    <h3 className="text-xl font-medium text-white mb-2 line-clamp-1 group-hover:text-brand-300 transition-colors">{property.title}</h3>
+                                                    <p className="text-sm text-gray-500 mb-6 line-clamp-2 leading-relaxed font-light">{property.description}</p>
 
-                                                    <div className="mt-auto flex gap-4">
+                                                    <div className="mt-auto flex gap-4 border-t border-dark-border pt-4">
                                                         {property.reportCount > 0 && (
                                                             <button
                                                                 onClick={() => handleApproveProperty(property.id)}
@@ -243,6 +257,26 @@ const AdminDashboard = () => {
                         {activeTab === 'maintenance' && (
                             <div className="space-y-6 animate-fade-in">
                                 <h2 className="text-xl font-semibold text-gray-200 border-b border-dark-border pb-2">Global Maintenance Requests</h2>
+                                {maintenanceAnalytics && (
+                                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                                        <div className="bg-dark/40 border border-dark-border rounded-md p-4 text-center">
+                                            <div className="text-2xl font-serif text-brand-400">{maintenanceAnalytics.totalTickets}</div>
+                                            <div className="text-xs uppercase tracking-widest text-gray-500 font-bold">Total</div>
+                                        </div>
+                                        <div className="bg-dark/40 border border-dark-border rounded-md p-4 text-center">
+                                            <div className="text-2xl font-serif text-gray-300">{maintenanceAnalytics.openTickets}</div>
+                                            <div className="text-xs uppercase tracking-widest text-gray-500 font-bold">Open</div>
+                                        </div>
+                                        <div className="bg-dark/40 border border-dark-border rounded-md p-4 text-center">
+                                            <div className="text-2xl font-serif text-orange-400">{maintenanceAnalytics.assignedTickets}</div>
+                                            <div className="text-xs uppercase tracking-widest text-gray-500 font-bold">Assigned</div>
+                                        </div>
+                                        <div className="bg-dark/40 border border-dark-border rounded-md p-4 text-center">
+                                            <div className="text-2xl font-serif text-green-400">{maintenanceAnalytics.completedTickets}</div>
+                                            <div className="text-xs uppercase tracking-widest text-gray-500 font-bold">Completed</div>
+                                        </div>
+                                    </div>
+                                )}
                                 {tickets.length === 0 ? (
                                     <div className="bg-dark-card p-8 rounded-xl text-center border border-dark-border">
                                         <p className="text-gray-400">No maintenance tickets have been submitted.</p>
@@ -403,6 +437,41 @@ const AdminDashboard = () => {
                                         </tbody>
                                     </table>
                                 </div>
+                            </div>
+                        )}
+
+                        {/* Fraud Tab */}
+                        {activeTab === 'fraud' && (
+                            <div className="space-y-6 animate-fade-in">
+                                <h2 className="text-xl font-semibold text-gray-200 border-b border-dark-border pb-2">Suspicious Activity & Fraud Logs</h2>
+                                {suspiciousLogs.length === 0 ? (
+                                    <div className="bg-dark-card p-8 rounded-xl text-center border border-dark-border">
+                                        <p className="text-gray-400">No suspicious activity detected.</p>
+                                    </div>
+                                ) : (
+                                    <div className="bg-dark-card border border-dark-border rounded-xl overflow-hidden shadow-lg">
+                                        <table className="w-full text-left border-collapse">
+                                            <thead>
+                                                <tr className="bg-dark border-b border-dark-border text-gray-400 text-sm">
+                                                    <th className="p-4 font-medium">Date</th>
+                                                    <th className="p-4 font-medium">Property ID</th>
+                                                    <th className="p-4 font-medium">User ID</th>
+                                                    <th className="p-4 font-medium">Reason</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-dark-border">
+                                                {suspiciousLogs.map(log => (
+                                                    <tr key={log.id} className="hover:bg-dark/50 transition-colors">
+                                                        <td className="p-4 text-gray-400 text-sm">{new Date(log.timestamp).toLocaleDateString()}</td>
+                                                        <td className="p-4 text-brand-300 text-sm font-medium">{log.propertyId}</td>
+                                                        <td className="p-4 text-brand-300 text-sm font-medium">{log.userId}</td>
+                                                        <td className="p-4 text-gray-200 text-sm">{log.reason}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </>

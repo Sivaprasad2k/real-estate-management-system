@@ -16,7 +16,12 @@ const PropertyDetail = () => {
     const [error, setError] = useState(null);
     const [showChat, setShowChat] = useState(false);
     const [showMarkModal, setShowMarkModal] = useState(false);
-    const [markForm, setMarkForm] = useState({ name: '', contact: '', amount: '' });
+    const [markForm, setMarkForm] = useState({ name: '', contact: '', amount: '', agreementFile: null });
+    const [showInitiateModal, setShowInitiateModal] = useState(false);
+    const [initiateForm, setInitiateForm] = useState({ buyerDetails: '', agreementFile: null });
+    const [showRentModal, setShowRentModal] = useState(false);
+    const [rentMessage, setRentMessage] = useState('');
+    const [rulesAccepted, setRulesAccepted] = useState(false);
 
     useEffect(() => {
         const fetchProperty = async () => {
@@ -64,10 +69,24 @@ const PropertyDetail = () => {
                     rentAmount: parseFloat(markForm.amount)
                 });
             } else {
+                if (!markForm.agreementFile) {
+                    alert("Please select a sale agreement document.");
+                    setIsLoading(false);
+                    return;
+                }
+
                 await api.put(`/properties/${property.id}/mark-sold`, {
                     buyerName: markForm.name,
                     buyerContact: markForm.contact,
                     soldAmount: parseFloat(markForm.amount)
+                });
+
+                const formData = new FormData();
+                formData.append('propertyId', property.id);
+                formData.append('file', markForm.agreementFile);
+
+                await api.post('/sale-agreements/upload', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
                 });
             }
             alert(`Property marked as ${property.purpose === 'RENT' ? 'rented' : 'sold'} successfully!`);
@@ -78,6 +97,84 @@ const PropertyDetail = () => {
             const errorData = err.response?.data;
             const errorMsg = typeof errorData === 'string' ? errorData : (errorData?.message || "Failed to update property status");
             alert(errorMsg);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleInitiateSaleSubmit = async (e) => {
+        e.preventDefault();
+        if (!initiateForm.agreementFile) {
+            alert("Please select a sale agreement document.");
+            return;
+        }
+        setIsLoading(true);
+        try {
+            const formData = new FormData();
+            if (user.id === property.ownerId) {
+                formData.append('buyerDetails', initiateForm.buyerDetails);
+            }
+            formData.append('file', initiateForm.agreementFile);
+
+            await api.post(`/properties/${property.id}/sale/initiate`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            alert('Sale initiated successfully. Waiting for other party confirmation.');
+            setShowInitiateModal(false);
+            const response = await api.get(`/properties/${id}`);
+            setProperty(response.data);
+        } catch (err) {
+            alert(err.response?.data || 'Failed to initiate sale');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleRentSubmit = async (e) => {
+        e.preventDefault();
+        if (property.rentalRules && !rulesAccepted) {
+            alert("You must accept the rental rules to apply.");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            await api.post(`/inquiries/${property.id}`, {
+                message: rentMessage || "I'm interested in renting this property.",
+                acceptedRentalRules: rulesAccepted
+            });
+            alert('Rental application submitted successfully!');
+            setShowRentModal(false);
+        } catch (err) {
+            alert(err.response?.data || 'Failed to submit rental application');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleApproveSale = async () => {
+        setIsLoading(true);
+        try {
+            await api.put(`/properties/${property.id}/sale/approve`);
+            alert('Sale approved successfully!');
+            const response = await api.get(`/properties/${id}`);
+            setProperty(response.data);
+        } catch (err) {
+            alert(err.response?.data || 'Failed to approve sale');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleRejectSale = async () => {
+        setIsLoading(true);
+        try {
+            await api.put(`/properties/${property.id}/sale/reject`);
+            alert('Sale rejected successfully!');
+            const response = await api.get(`/properties/${id}`);
+            setProperty(response.data);
+        } catch (err) {
+            alert(err.response?.data || 'Failed to reject sale');
         } finally {
             setIsLoading(false);
         }
@@ -202,7 +299,23 @@ const PropertyDetail = () => {
                         </div>
                     )}
 
-                    {/* Actions */}
+                    {/* Map Section */}
+                    {property.latitude && property.longitude && (
+                        <div className="mt-8">
+                            <h3 className="text-sm font-semibold text-white mb-3 uppercase tracking-wider">Location Map</h3>
+                            <div className="w-full h-64 rounded-md overflow-hidden border border-dark-border">
+                                <iframe
+                                    width="100%"
+                                    height="100%"
+                                    frameBorder="0"
+                                    style={{ border: 0 }}
+                                    src={`https://maps.google.com/maps?q=${property.latitude},${property.longitude}&hl=en&z=14&output=embed`}
+                                    allowFullScreen
+                                ></iframe>
+                            </div>
+                        </div>
+                    )}
+
                     {user?.id !== property.ownerId && property.status !== 'RENTED' && property.status !== 'SOLD' && (
                         <div className="mt-10 pt-8 border-t border-dark-border flex flex-col sm:flex-row gap-4">
                             <button
@@ -211,6 +324,32 @@ const PropertyDetail = () => {
                             >
                                 Contact Owner
                             </button>
+                            {property.purpose === 'BUY' && property.status === 'AVAILABLE' && (
+                                <button
+                                    onClick={() => setShowInitiateModal(true)}
+                                    className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-medium py-3.5 px-6 rounded-sm shadow-md transition-colors text-center text-[13px] tracking-widest uppercase"
+                                >
+                                    Initiate Purchase
+                                </button>
+                            )}
+                            {property.purpose === 'RENT' && property.status === 'AVAILABLE' && (
+                                <button
+                                    onClick={() => {
+                                        setRentMessage(`I am interested in renting ${property.title}.`);
+                                        setRulesAccepted(false);
+                                        setShowRentModal(true);
+                                    }}
+                                    className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-medium py-3.5 px-6 rounded-sm shadow-md transition-colors text-center text-[13px] tracking-widest uppercase"
+                                >
+                                    Apply for Rent
+                                </button>
+                            )}
+                            {property.status === 'PENDING_BUYER_CONFIRMATION' && (
+                                <div className="flex gap-4 w-full">
+                                    <button onClick={handleApproveSale} className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3.5 px-6 rounded-sm uppercase tracking-widest text-[13px]">Approve Sale</button>
+                                    <button onClick={handleRejectSale} className="flex-1 bg-red-500 hover:bg-red-600 text-white py-3.5 px-6 rounded-sm uppercase tracking-widest text-[13px]">Reject Sale</button>
+                                </div>
+                            )}
                         </div>
                     )}
                     {user?.id !== property.ownerId && property.status === 'RENTED' && (
@@ -222,14 +361,30 @@ const PropertyDetail = () => {
                             />
                         </div>
                     )}
-                    {user?.id === property.ownerId && property.status === 'APPROVED' && (
+                    {user?.id === property.ownerId && property.status === 'APPROVED' && property.purpose === 'RENT' && (
                         <div className="mt-10 pt-8 border-t border-dark-border flex flex-col sm:flex-row gap-4">
                             <button
                                 onClick={() => setShowMarkModal(true)}
-                                className="flex-1 bg-brand-500 hover:bg-brand-600 text-dark font-medium py-3.5 px-6 rounded-sm shadow-md transition-colors text-center text-[13px] tracking-widest uppercase"
+                                className="w-full bg-brand-500 hover:bg-brand-600 text-dark font-medium py-3.5 px-6 rounded-sm shadow-md transition-colors text-center text-[13px] tracking-widest uppercase"
                             >
-                                {property.purpose === 'RENT' ? 'Mark as Rented' : 'Mark as Sold'}
+                                Mark as Rented
                             </button>
+                        </div>
+                    )}
+                    {user?.id === property.ownerId && (property.status === 'APPROVED' || property.status === 'AVAILABLE') && property.purpose === 'BUY' && (
+                        <div className="mt-10 pt-8 border-t border-dark-border flex flex-col sm:flex-row gap-4">
+                            <button
+                                onClick={() => setShowInitiateModal(true)}
+                                className="w-full bg-brand-500 hover:bg-brand-600 text-dark font-medium py-3.5 px-6 rounded-sm shadow-md transition-colors text-center text-[13px] tracking-widest uppercase"
+                            >
+                                Initiate Sale
+                            </button>
+                        </div>
+                    )}
+                    {user?.id === property.ownerId && property.status === 'PENDING_OWNER_CONFIRMATION' && (
+                        <div className="mt-10 pt-8 border-t border-dark-border flex gap-4 w-full">
+                            <button onClick={handleApproveSale} className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3.5 px-6 rounded-sm uppercase tracking-widest text-[13px]">Approve Sale</button>
+                            <button onClick={handleRejectSale} className="flex-1 bg-red-500 hover:bg-red-600 text-white py-3.5 px-6 rounded-sm uppercase tracking-widest text-[13px]">Reject Sale</button>
                         </div>
                     )}
                 </div>
@@ -266,76 +421,112 @@ const PropertyDetail = () => {
                             }
                         }}
                     />
-                ) : (
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                        <div className="bg-dark-card border border-dark-border rounded-xl w-full max-w-md p-6 shadow-2xl animate-fade-in">
-                            <h2 className="text-xl font-semibold text-white mb-4">
-                                Mark as Sold
-                            </h2>
-                            <p className="text-sm text-gray-400 mb-6 font-light">
-                                Enter the details of the buyer to finalize this listing.
-                            </p>
-                            <form onSubmit={handleMarkSubmit} className="space-y-4">
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wider">
-                                        Buyer Name
-                                    </label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={markForm.name}
-                                        onChange={(e) => setMarkForm({ ...markForm, name: e.target.value })}
-                                        className="w-full bg-dark border border-dark-border rounded-md px-3 py-2.5 text-white focus:outline-none focus:border-brand-500 transition-colors"
-                                        placeholder="e.g. John Doe"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wider">
-                                        Contact Info
-                                    </label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={markForm.contact}
-                                        onChange={(e) => setMarkForm({ ...markForm, contact: e.target.value })}
-                                        className="w-full bg-dark border border-dark-border rounded-md px-3 py-2.5 text-white focus:outline-none focus:border-brand-500 transition-colors"
-                                        placeholder="Phone or Email"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wider">
-                                        Sold Price (₹)
-                                    </label>
-                                    <input
-                                        type="number"
-                                        required
-                                        min="0"
-                                        value={markForm.amount}
-                                        onChange={(e) => setMarkForm({ ...markForm, amount: e.target.value })}
-                                        className="w-full bg-dark border border-dark-border rounded-md px-3 py-2.5 text-white focus:outline-none focus:border-brand-500 transition-colors"
-                                        placeholder="Enter amount"
-                                    />
-                                </div>
-                                <div className="flex justify-end gap-3 mt-8">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowMarkModal(false)}
-                                        className="px-5 py-2.5 rounded-md text-gray-400 hover:text-white transition-colors text-sm font-medium"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="px-5 py-2.5 rounded-md bg-brand-500 hover:bg-brand-400 text-dark font-medium transition-colors text-sm"
-                                    >
-                                        Confirm & Save
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )
+                ) : null
             )}
+
+            {/* Initiate Sale Modal */}
+            {showInitiateModal && property && property.purpose === 'BUY' && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-dark-card border border-dark-border rounded-xl w-full max-w-md p-6 shadow-2xl animate-fade-in">
+                        <h2 className="text-xl font-semibold text-white mb-4">
+                            Initiate Sale Verification
+                        </h2>
+                        <form onSubmit={handleInitiateSaleSubmit} className="space-y-4">
+                            {user.id === property.ownerId && (
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-300 mb-1 tracking-wider">
+                                        Buyer Details <span className="text-red-500">*</span>
+                                    </label>
+                                    <textarea
+                                        required
+                                        value={initiateForm.buyerDetails}
+                                        onChange={(e) => setInitiateForm({ ...initiateForm, buyerDetails: e.target.value })}
+                                        className="w-full bg-dark border border-dark-border rounded-md px-3 py-2 text-white"
+                                        placeholder="Name, Contact, Agreement terms..."
+                                    />
+                                </div>
+                            )}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-300 mb-1 tracking-wider">
+                                    Sale Document (PDF) <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="file"
+                                    accept=".pdf"
+                                    required
+                                    onChange={(e) => setInitiateForm({ ...initiateForm, agreementFile: e.target.files[0] })}
+                                    className="w-full bg-dark border border-dark-border rounded-md px-3 py-2 text-white"
+                                />
+                            </div>
+                            <div className="flex justify-end gap-3 mt-8">
+                                <button type="button" onClick={() => setShowInitiateModal(false)} className="px-4 py-2 text-gray-400 hover:text-white">Cancel</button>
+                                <button type="submit" className="px-4 py-2 bg-brand-500 text-dark rounded-md">Submit Document</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Rent Application Modal */}
+            {showRentModal && property && property.purpose === 'RENT' && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-dark-card border border-dark-border rounded-xl w-full max-w-md p-6 shadow-2xl animate-fade-in">
+                        <h2 className="text-xl font-semibold text-white mb-4">
+                            Apply for Rent
+                        </h2>
+
+                        {property.rentalRules && (
+                            <div className="mb-4 bg-gray-900 border border-dark-border rounded-md p-4 max-h-40 overflow-y-auto">
+                                <h3 className="text-sm font-semibold text-red-400 mb-2 uppercase tracking-wide">Rental Rules & Requirements</h3>
+                                <p className="text-sm text-gray-300 whitespace-pre-wrap">{property.rentalRules}</p>
+                            </div>
+                        )}
+
+                        <form onSubmit={handleRentSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-medium text-gray-300 mb-1 tracking-wider">
+                                    Message to Owner <span className="text-red-500">*</span>
+                                </label>
+                                <textarea
+                                    required
+                                    value={rentMessage}
+                                    onChange={(e) => setRentMessage(e.target.value)}
+                                    className="w-full bg-dark border border-dark-border rounded-md px-3 py-2 text-white"
+                                    rows="3"
+                                />
+                            </div>
+
+                            {property.rentalRules && (
+                                <div className="flex items-start mt-2">
+                                    <input
+                                        type="checkbox"
+                                        id="acceptRules"
+                                        checked={rulesAccepted}
+                                        onChange={(e) => setRulesAccepted(e.target.checked)}
+                                        className="mt-1 mr-2"
+                                        required
+                                    />
+                                    <label htmlFor="acceptRules" className="text-sm text-gray-300">
+                                        I have read and accept all the rental rules and requirements.
+                                    </label>
+                                </div>
+                            )}
+
+                            <div className="flex justify-end gap-3 mt-8">
+                                <button type="button" onClick={() => setShowRentModal(false)} className="px-4 py-2 text-gray-400 hover:text-white">Cancel</button>
+                                <button
+                                    type="submit"
+                                    disabled={property.rentalRules && !rulesAccepted}
+                                    className="px-4 py-2 bg-brand-500 text-dark rounded-md disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed"
+                                >
+                                    Submit Application
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 };

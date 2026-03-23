@@ -6,6 +6,8 @@ import com.rems.realestate.model.PropertyStatus;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.Point;
 
 import java.util.List;
 
@@ -24,4 +26,6 @@ public interface PropertyRepository extends MongoRepository<Property, String> {
                         Double minPrice, Double maxPrice);
 
         List<Property> findByStatus(PropertyStatus status);
+
+        List<Property> findByLocationNear(Point location, Distance distance);
 }

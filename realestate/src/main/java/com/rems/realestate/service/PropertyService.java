@@ -10,7 +10,16 @@ import com.rems.realestate.repository.UserRepository;
 import com.rems.realestate.repository.RentalAgreementRepository;
 import com.rems.realestate.model.RentalAgreement;
 import com.rems.realestate.model.RentalAgreementStatus;
+import com.rems.realestate.dto.RentalMetadataRequest;
+import com.rems.realestate.dto.PropertySearchRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.Metrics;
+import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -28,6 +37,12 @@ public class PropertyService {
     @Autowired
     private RentalAgreementRepository rentalAgreementRepository;
 
+    @Autowired
+    private MongoTemplate mongoTemplate;
+
+    @Autowired
+    private NotificationService notificationService;
+
     public Property createProperty(PropertyRequest request, String ownerId) {
         User user = userRepository.findById(ownerId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -43,6 +58,17 @@ public class PropertyService {
                 .state(request.getState())
                 .amenities(request.getAmenities())
                 .images(request.getImages())
+                .bedrooms(request.getBedrooms() != null ? request.getBedrooms() : 0)
+                .bathrooms(request.getBathrooms() != null ? request.getBathrooms() : 0)
+                .squareFootage(request.getSquareFootage() != null ? request.getSquareFootage() : 0.0)
+                .latitude(request.getLatitude())
+                .longitude(request.getLongitude())
+                .location(request.getLatitude() != null && request.getLongitude() != null
+                        ? com.rems.realestate.model.Location.builder()
+                                .type("Point")
+                                .coordinates(java.util.Arrays.asList(request.getLongitude(), request.getLatitude()))
+                                .build()
+                        : null)
                 .createdAt(LocalDateTime.now())
                 .reportCount(0)
                 .build();
@@ -70,6 +96,20 @@ public class PropertyService {
         property.setState(request.getState());
         property.setAmenities(request.getAmenities());
         property.setImages(request.getImages());
+        property.setBedrooms(request.getBedrooms() != null ? request.getBedrooms() : 0);
+        property.setBathrooms(request.getBathrooms() != null ? request.getBathrooms() : 0);
+        property.setSquareFootage(request.getSquareFootage() != null ? request.getSquareFootage() : 0.0);
+        property.setLatitude(request.getLatitude());
+        property.setLongitude(request.getLongitude());
+
+        if (request.getLatitude() != null && request.getLongitude() != null) {
+            property.setLocation(com.rems.realestate.model.Location.builder()
+                    .type("Point")
+                    .coordinates(java.util.Arrays.asList(request.getLongitude(), request.getLatitude()))
+                    .build());
+        } else {
+            property.setLocation(null);
+        }
 
         if (priceChanged) {
             User user = userRepository.findById(ownerId).orElseThrow(() -> new RuntimeException("User not found"));
@@ -94,6 +134,55 @@ public class PropertyService {
         return propertyRepository.searchProperties(city, purpose, minPrice, maxPrice);
     }
 
+    public List<Property> advancedSearch(PropertySearchRequest request) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("status").is(PropertyStatus.APPROVED));
+
+        if (request.getKeyword() != null && !request.getKeyword().isEmpty()) {
+            Criteria keywordCriteria = new Criteria().orOperator(
+                    Criteria.where("title").regex(request.getKeyword(), "i"),
+                    Criteria.where("description").regex(request.getKeyword(), "i"),
+                    Criteria.where("city").regex(request.getKeyword(), "i"),
+                    Criteria.where("state").regex(request.getKeyword(), "i"));
+            query.addCriteria(keywordCriteria);
+        }
+
+        if (request.getPurpose() != null) {
+            query.addCriteria(Criteria.where("purpose").is(request.getPurpose()));
+        }
+
+        if (request.getType() != null) {
+            query.addCriteria(Criteria.where("type").is(request.getType()));
+        }
+
+        if (request.getMinPrice() != null || request.getMaxPrice() != null) {
+            Criteria priceCriteria = Criteria.where("price");
+            if (request.getMinPrice() != null)
+                priceCriteria.gte(request.getMinPrice());
+            if (request.getMaxPrice() != null)
+                priceCriteria.lte(request.getMaxPrice());
+            query.addCriteria(priceCriteria);
+        }
+
+        if (request.getAmenities() != null && !request.getAmenities().isEmpty()) {
+            query.addCriteria(Criteria.where("amenities").all(request.getAmenities()));
+        }
+
+        // Default sort by promoted (desc), then createdAt (desc) for "recommended"
+        if ("price_asc".equals(request.getSortBy())) {
+            query.with(Sort.by(Sort.Direction.ASC, "price"));
+        } else if ("price_desc".equals(request.getSortBy())) {
+            query.with(Sort.by(Sort.Direction.DESC, "price"));
+        } else if ("recent".equals(request.getSortBy())) {
+            query.with(Sort.by(Sort.Direction.DESC, "createdAt"));
+        } else {
+            // "recommended" or default
+            query.with(Sort.by(Sort.Direction.DESC, "isPromoted").and(Sort.by(Sort.Direction.DESC, "createdAt")));
+        }
+
+        return mongoTemplate.find(query, Property.class);
+    }
+
     public List<Property> getAllProperties() {
         return propertyRepository.findAll();
     }
@@ -110,8 +199,8 @@ public class PropertyService {
             throw new RuntimeException("Not authorized");
         }
 
-        if (property.getStatus() != PropertyStatus.APPROVED) {
-            throw new RuntimeException("Only APPROVED properties can be marked as sold.");
+        if (property.getStatus() != PropertyStatus.APPROVED && property.getStatus() != PropertyStatus.AVAILABLE) {
+            throw new RuntimeException("Only APPROVED/AVAILABLE properties can be marked as sold directly.");
         }
 
         property.setStatus(PropertyStatus.SOLD);
@@ -119,6 +208,105 @@ public class PropertyService {
         property.setTransactionContact(request.getBuyerContact());
         property.setTransactionAmount(request.getSoldAmount());
         propertyRepository.save(property);
+    }
+
+    public void initiateSale(String propertyId, String userId, String buyerDetails, String fileUrl) {
+        Property property = propertyRepository.findById(propertyId)
+                .orElseThrow(() -> new RuntimeException("Property not found"));
+
+        if (property.getOwnerId().equals(userId)) {
+            if (buyerDetails == null || buyerDetails.isEmpty()) {
+                throw new RuntimeException("Buyer details required when owner initiates sale");
+            }
+            property.setStatus(PropertyStatus.PENDING_BUYER_CONFIRMATION);
+            property.setSaleBuyerDetails(buyerDetails);
+        } else {
+            property.setStatus(PropertyStatus.PENDING_OWNER_CONFIRMATION);
+            User buyer = userRepository.findById(userId).orElseThrow();
+            property.setSaleBuyerDetails(buyer.getName() + " (" + buyer.getEmail() + ")");
+        }
+
+        property.setSaleInitiatedBy(userId);
+        property.setSaleInitiatedAt(LocalDateTime.now());
+        property.setSaleDocumentUrl(fileUrl);
+        propertyRepository.save(property);
+
+        if (property.getStatus() == PropertyStatus.PENDING_BUYER_CONFIRMATION) {
+            notificationService.createNotification(
+                    property.getSaleInitiatedBy(), // We don't know the exact buyer ID easily if initiated by owner with
+                                                   // details string, but we can notify the owner that it's sent.
+                    "System Notice: Sale initiation sent for property '" + property.getTitle() + "' to buyer "
+                            + buyerDetails + ".",
+                    "SALE");
+        } else {
+            notificationService.createNotification(
+                    property.getOwnerId(),
+                    "System Notice: Buyer wants to initiate purchase for property '" + property.getTitle()
+                            + "'. Please review.",
+                    "SALE");
+        }
+    }
+
+    public void approveSale(String propertyId, String userId) {
+        Property property = propertyRepository.findById(propertyId)
+                .orElseThrow(() -> new RuntimeException("Property not found"));
+
+        if (property.getStatus() == PropertyStatus.PENDING_OWNER_CONFIRMATION) {
+            if (!property.getOwnerId().equals(userId)) {
+                throw new RuntimeException("Only owner can approve this sale");
+            }
+        } else if (property.getStatus() != PropertyStatus.PENDING_BUYER_CONFIRMATION) {
+            throw new RuntimeException("No pending sale to approve");
+        }
+
+        property.setStatus(PropertyStatus.SOLD);
+        property.setSaleApprovedBy(userId);
+        property.setSaleApprovedAt(LocalDateTime.now());
+        propertyRepository.save(property);
+
+        notificationService.createNotification(
+                property.getOwnerId(),
+                "System Notice: Sale for property '" + property.getTitle() + "' has been APPROVED and is now SOLD.",
+                "SALE");
+        if (property.getSaleInitiatedBy() != null && !property.getSaleInitiatedBy().equals(property.getOwnerId())) {
+            notificationService.createNotification(
+                    property.getSaleInitiatedBy(),
+                    "System Notice: Your purchase for property '" + property.getTitle()
+                            + "' has been APPROVED and is now SOLD.",
+                    "SALE");
+        }
+    }
+
+    public void rejectSale(String propertyId, String userId) {
+        Property property = propertyRepository.findById(propertyId)
+                .orElseThrow(() -> new RuntimeException("Property not found"));
+
+        if (property.getStatus() == PropertyStatus.PENDING_OWNER_CONFIRMATION) {
+            if (!property.getOwnerId().equals(userId)) {
+                throw new RuntimeException("Only owner can reject this sale");
+            }
+        }
+
+        property.setStatus(PropertyStatus.AVAILABLE);
+        property.setSaleInitiatedBy(null);
+        property.setSaleInitiatedAt(null);
+        property.setSaleDocumentUrl(null);
+        property.setSaleBuyerDetails(null);
+        propertyRepository.save(property);
+
+        notificationService.createNotification(
+                property.getOwnerId(),
+                "System Notice: Sale for property '" + property.getTitle() + "' has been REJECTED/CANCELLED.",
+                "SALE");
+        // If buyer initiated, notify them
+        if (userId.equals(property.getOwnerId()) && property.getSaleInitiatedBy() != null
+                && !property.getSaleInitiatedBy().equals(userId)) {
+            notificationService.createNotification(
+                    property.getSaleInitiatedBy(),
+                    "System Notice: Your purchase request for property '" + property.getTitle()
+                            + "' was REJECTED by the owner.",
+                    "SALE");
+        }
     }
 
     public void markRented(String propertyId, String ownerId, com.rems.realestate.dto.MarkRentedRequest request) {
@@ -138,6 +326,31 @@ public class PropertyService {
         property.setTransactionContact(request.getTenantContact());
         property.setTransactionAmount(request.getRentAmount());
         propertyRepository.save(property);
+    }
+
+    public Property updateRentalMetadata(String propertyId, String ownerId, RentalMetadataRequest request) {
+        Property property = propertyRepository.findById(propertyId)
+                .orElseThrow(() -> new RuntimeException("Property not found"));
+
+        if (!property.getOwnerId().equals(ownerId)) {
+            throw new RuntimeException("Not authorized to update rental metadata.");
+        }
+
+        property.setTenantId(request.getTenantId());
+        property.setRentAmount(request.getRentAmount());
+        property.setDepositAmount(request.getDepositAmount());
+        property.setRentStartDate(request.getRentStartDate());
+        property.setRentEndDate(request.getRentEndDate());
+        property.setNotes(request.getNotes());
+        property.setStatus(PropertyStatus.RENTED);
+
+        return propertyRepository.save(property);
+    }
+
+    public List<Property> getNearbyProperties(double longitude, double latitude, double distanceKm) {
+        Point point = new Point(longitude, latitude);
+        Distance distance = new Distance(distanceKm, Metrics.KILOMETERS);
+        return propertyRepository.findByLocationNear(point, distance);
     }
 
     public List<Property> getFlaggedProperties() {

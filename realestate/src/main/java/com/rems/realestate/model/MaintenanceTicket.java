@@ -45,4 +45,8 @@ public class MaintenanceTicket {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     private LocalDateTime updatedAt;
+
+    private LocalDateTime acceptedAt;
+
+    private LocalDateTime completedAt;
 }

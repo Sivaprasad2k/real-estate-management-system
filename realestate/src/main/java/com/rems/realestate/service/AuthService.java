@@ -73,9 +73,14 @@ public class AuthService {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         String jwtToken = jwtService.generateToken(userDetails);
 
+        java.util.Set<String> rolesToReturn = user.getRoles();
+        if (rolesToReturn == null || rolesToReturn.isEmpty()) {
+            rolesToReturn = java.util.Collections.singleton("ROLE_USER");
+        }
+
         return AuthResponse.builder()
                 .token(jwtToken)
-                .roles(user.getRoles())
+                .roles(rolesToReturn)
                 .build();
     }
 }

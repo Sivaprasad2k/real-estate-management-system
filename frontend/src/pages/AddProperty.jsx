@@ -3,6 +3,31 @@ import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
 import api from '../api/axios';
 import UserSidebar from '../components/UserSidebar';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix for default marker icon in leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
+
+function MapClickHandler({ setFormData, formData }) {
+    useMapEvents({
+        click(e) {
+            setFormData({
+                ...formData,
+                latitude: e.latlng.lat,
+                longitude: e.latlng.lng
+            });
+        },
+    });
+    return null;
+}
 
 const AddProperty = () => {
     const navigate = useNavigate();
@@ -23,7 +48,10 @@ const AddProperty = () => {
         bathrooms: '',
         squareFootage: '',
         amenities: '', // Will split by comma before sending
-        images: ''     // Will split by comma before sending
+        images: '',     // Will split by comma before sending
+        latitude: '',
+        longitude: '',
+        rentalRules: ''
     });
 
     const handleChange = (e) => {
@@ -49,7 +77,10 @@ const AddProperty = () => {
             bathrooms: formData.bathrooms ? parseInt(formData.bathrooms) : 0,
             squareFootage: formData.squareFootage ? parseFloat(formData.squareFootage) : 0.0,
             amenities: formData.amenities ? formData.amenities.split(',').map(item => item.trim()).filter(Boolean) : [],
-            images: formData.images ? formData.images.split(',').map(item => item.trim()).filter(Boolean) : []
+            images: formData.images ? formData.images.split(',').map(item => item.trim()).filter(Boolean) : [],
+            latitude: formData.latitude ? parseFloat(formData.latitude) : null,
+            longitude: formData.longitude ? parseFloat(formData.longitude) : null,
+            rentalRules: formData.purpose === 'RENT' ? formData.rentalRules : null
         };
 
         try {
@@ -148,6 +179,40 @@ const AddProperty = () => {
                                     <input id="state" type="text" value={formData.state} onChange={handleChange}
                                         className="w-full border border-dark-border rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-500 outline-none text-black bg-white" />
                                 </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-1" htmlFor="latitude">Latitude (Map Pin Y)</label>
+                                    <input id="latitude" type="number" step="any" value={formData.latitude} readOnly
+                                        placeholder="Click on the map below"
+                                        className="w-full border border-dark-border rounded-lg px-4 py-2 outline-none text-gray-500 bg-gray-100 cursor-not-allowed" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-1" htmlFor="longitude">Longitude (Map Pin X)</label>
+                                    <input id="longitude" type="number" step="any" value={formData.longitude} readOnly
+                                        placeholder="Click on the map below"
+                                        className="w-full border border-dark-border rounded-lg px-4 py-2 outline-none text-gray-500 bg-gray-100 cursor-not-allowed" />
+                                </div>
+                            </div>
+
+                            <div className="w-full">
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Pinpoint Location on Map *</label>
+                                <p className="text-xs text-gray-400 mb-3">Click anywhere on the map to set the exact coordinates of the property.</p>
+                                <div className="h-64 w-full rounded-lg overflow-hidden border border-dark-border relative z-0">
+                                    <MapContainer
+                                        center={[20.5937, 78.9629]}
+                                        zoom={4}
+                                        style={{ height: '100%', width: '100%' }}
+                                        scrollWheelZoom={true}
+                                    >
+                                        <TileLayer
+                                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                            attribution='&copy; OSM contributors'
+                                        />
+                                        <MapClickHandler setFormData={setFormData} formData={formData} />
+                                        {formData.latitude && formData.longitude && (
+                                            <Marker position={[formData.latitude, formData.longitude]} />
+                                        )}
+                                    </MapContainer>
+                                </div>
                             </div>
                         </div>
 
@@ -202,6 +267,16 @@ const AddProperty = () => {
                                         placeholder="https://image1.jpg, https://image2.png" />
                                     <p className="text-xs text-gray-400 mt-1">For now, provide direct URLs to existing images hosted online.</p>
                                 </div>
+
+                                {formData.purpose === 'RENT' && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-1" htmlFor="rentalRules">Rental Rules & Requirements</label>
+                                        <textarea id="rentalRules" rows="3" value={formData.rentalRules} onChange={handleChange}
+                                            className="w-full border border-dark-border rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-500 outline-none resize-none text-black bg-white"
+                                            placeholder="e.g. No pets allowed. 2 months security deposit required."></textarea>
+                                        <p className="text-xs text-gray-400 mt-1">Tenants must accept these rules before they can apply for rent.</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
 

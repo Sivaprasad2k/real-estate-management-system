@@ -13,4 +13,9 @@ public interface MaintenanceTicketRepository extends MongoRepository<Maintenance
     List<MaintenanceTicket> findByStaffId(String staffId);
 
     List<MaintenanceTicket> findByTenantId(String tenantId);
+
+    long countByStatus(com.rems.realestate.model.MaintenanceTicketStatus status);
+
+    List<MaintenanceTicket> findByStatusAndTypeIn(com.rems.realestate.model.MaintenanceTicketStatus status,
+            List<com.rems.realestate.model.MaintenanceType> types);
 }

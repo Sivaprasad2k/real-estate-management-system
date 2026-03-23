@@ -47,22 +47,20 @@ const Home = () => {
                         <div className="bg-[#111]/80 backdrop-blur-xl border border-white/10 p-4 md:p-6 rounded-md flex flex-col md:flex-row gap-5 items-center w-full max-w-5xl shadow-2xl">
                             <div className="w-full">
                                 <label className="block text-[9px] uppercase tracking-widest text-gray-500 font-bold mb-2">Location</label>
-                                <select className="w-full bg-transparent text-white border-b border-gray-600/50 pb-2 focus:outline-none focus:border-brand-400 text-[13px] font-light uppercase tracking-wider cursor-pointer">
-                                    <option value="" className="bg-dark text-white">Any City</option>
-                                    <option value="ny" className="bg-dark text-white">New York</option>
-                                    <option value="la" className="bg-dark text-white">Los Angeles</option>
-                                    <option value="ldn" className="bg-dark text-white">London</option>
-                                    <option value="dxb" className="bg-dark text-white">Dubai</option>
-                                </select>
+                                <input
+                                    type="text"
+                                    placeholder="Enter City..."
+                                    className="w-full bg-transparent text-white border-b border-gray-600/50 pb-2 focus:outline-none focus:border-brand-400 text-[13px] font-light tracking-wider placeholder-gray-500"
+                                />
                             </div>
                             <div className="w-full">
                                 <label className="block text-[9px] uppercase tracking-widest text-gray-500 font-bold mb-2">Max Price</label>
                                 <select className="w-full bg-transparent text-white border-b border-gray-600/50 pb-2 focus:outline-none focus:border-brand-400 text-[13px] font-light uppercase tracking-wider cursor-pointer">
                                     <option value="" className="bg-dark text-white">Any Price</option>
-                                    <option value="500k" className="bg-dark text-white">$500,000</option>
-                                    <option value="1m" className="bg-dark text-white">$1,000,000</option>
-                                    <option value="5m" className="bg-dark text-white">$5,000,000</option>
-                                    <option value="10m" className="bg-dark text-white">$10,000,000+</option>
+                                    <option value="500k" className="bg-dark text-white">₹50,00,000</option>
+                                    <option value="1m" className="bg-dark text-white">₹1,00,00,000</option>
+                                    <option value="5m" className="bg-dark text-white">₹5,00,00,000</option>
+                                    <option value="10m" className="bg-dark text-white">₹10,00,00,000+</option>
                                 </select>
                             </div>
                             <div className="w-full">

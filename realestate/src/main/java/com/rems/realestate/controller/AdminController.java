@@ -7,13 +7,17 @@ import com.rems.realestate.model.Property;
 import com.rems.realestate.model.Report;
 import com.rems.realestate.model.User;
 import com.rems.realestate.dto.SystemStatsResponse;
+import com.rems.realestate.dto.MaintenanceAnalyticsResponse;
 import com.rems.realestate.service.PropertyService;
 import com.rems.realestate.service.ReportService;
 import com.rems.realestate.service.UserService;
+import com.rems.realestate.service.MaintenanceService;
 import com.rems.realestate.repository.UserRepository;
 import com.rems.realestate.repository.PropertyRepository;
 import com.rems.realestate.repository.ReportRepository;
 import com.rems.realestate.repository.MaintenanceTicketRepository;
+import com.rems.realestate.repository.SuspiciousActivityLogRepository;
+import com.rems.realestate.model.SuspiciousActivityLog;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -47,6 +51,12 @@ public class AdminController {
 
     @Autowired
     private MaintenanceTicketRepository ticketRepository;
+
+    @Autowired
+    private MaintenanceService maintenanceService;
+
+    @Autowired
+    private SuspiciousActivityLogRepository suspiciousLogRepository;
 
     @GetMapping("/stats")
     public ResponseEntity<SystemStatsResponse> getSystemStats() {
@@ -88,6 +98,11 @@ public class AdminController {
     @GetMapping("/maintenance")
     public ResponseEntity<List<MaintenanceTicket>> getAllMaintenanceTickets() {
         return ResponseEntity.ok(ticketRepository.findAll());
+    }
+
+    @GetMapping("/maintenance/analytics")
+    public ResponseEntity<MaintenanceAnalyticsResponse> getMaintenanceAnalytics() {
+        return ResponseEntity.ok(maintenanceService.getAnalytics());
     }
 
     @PutMapping("/users/{id}/ban")
@@ -138,5 +153,10 @@ public class AdminController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    @GetMapping("/suspicious-logs")
+    public ResponseEntity<List<SuspiciousActivityLog>> getSuspiciousLogs() {
+        return ResponseEntity.ok(suspiciousLogRepository.findAll());
     }
 }

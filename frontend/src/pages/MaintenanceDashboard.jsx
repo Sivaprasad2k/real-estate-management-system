@@ -7,8 +7,9 @@ const MaintenanceDashboard = () => {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
     const [tickets, setTickets] = useState([]);
+    const [availableTickets, setAvailableTickets] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('OPEN'); // OPEN, IN_PROGRESS, RESOLVED
+    const [activeTab, setActiveTab] = useState('AVAILABLE'); // AVAILABLE, OPEN, IN_PROGRESS, RESOLVED
     const [error, setError] = useState(null);
 
     useEffect(() => {
@@ -18,8 +19,12 @@ const MaintenanceDashboard = () => {
     const fetchTickets = async () => {
         setIsLoading(true);
         try {
-            const res = await api.get('/maintenance/staff');
-            setTickets(res.data);
+            const [myRes, availRes] = await Promise.all([
+                api.get('/maintenance/staff'),
+                api.get('/maintenance/available')
+            ]);
+            setTickets(myRes.data);
+            setAvailableTickets(availRes.data);
             setError(null);
         } catch (err) {
             console.error("Failed to fetch tickets", err);
@@ -35,6 +40,24 @@ const MaintenanceDashboard = () => {
             setTickets(tickets.map(t => t.id === ticketId ? res.data : t));
         } catch (err) {
             alert(err.response?.data || "Failed to update ticket status");
+        }
+    };
+
+    const handleAcceptTicket = async (ticketId) => {
+        try {
+            await api.put(`/maintenance/${ticketId}/accept`);
+            fetchTickets();
+        } catch (err) {
+            alert(err.response?.data || "Failed to accept ticket");
+        }
+    };
+
+    const handleCancelTicket = async (ticketId) => {
+        try {
+            await api.put(`/maintenance/${ticketId}/cancel`);
+            fetchTickets();
+        } catch (err) {
+            alert(err.response?.data || "Failed to cancel ticket");
         }
     };
 
@@ -80,15 +103,31 @@ const MaintenanceDashboard = () => {
                 </div>
 
                 <div className="flex gap-3 pt-2">
-                    {(ticket.status === 'OPEN' || ticket.status === 'ASSIGNED') && (
+                    {ticket.status === 'OPEN' && !tickets.find(t => t.id === ticket.id) && (
                         <button
-                            onClick={() => handleUpdateStatus(ticket.id, 'IN_PROGRESS')}
-                            className="w-full bg-brand-500 text-dark font-medium py-2 rounded shadow-sm hover:bg-brand-400 transition-colors tracking-wide text-sm"
+                            onClick={() => handleAcceptTicket(ticket.id)}
+                            className="w-full bg-blue-500 text-white font-medium py-2 rounded shadow-sm hover:bg-blue-400 transition-colors tracking-wide text-sm"
                         >
-                            Start Work
+                            Claim Job
                         </button>
                     )}
-                    {ticket.status === 'IN_PROGRESS' && (
+                    {tickets.find(t => t.id === ticket.id) && (ticket.status === 'OPEN' || ticket.status === 'ASSIGNED') && (
+                        <div className="flex gap-2 w-full">
+                            <button
+                                onClick={() => handleUpdateStatus(ticket.id, 'IN_PROGRESS')}
+                                className="flex-1 bg-brand-500 text-dark font-medium py-2 rounded shadow-sm hover:bg-brand-400 transition-colors tracking-wide text-sm"
+                            >
+                                Start Work
+                            </button>
+                            <button
+                                onClick={() => handleCancelTicket(ticket.id)}
+                                className="flex-1 bg-red-600/90 text-white font-medium py-2 rounded shadow-sm hover:bg-red-500 transition-colors tracking-wide text-sm"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    )}
+                    {tickets.find(t => t.id === ticket.id) && ticket.status === 'IN_PROGRESS' && (
                         <button
                             onClick={() => handleUpdateStatus(ticket.id, 'RESOLVED')}
                             className="w-full bg-green-600/90 text-white font-medium py-2 rounded shadow-sm hover:bg-green-500 transition-colors tracking-wide text-sm"
@@ -110,27 +149,19 @@ const MaintenanceDashboard = () => {
     );
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] pb-12">
-            {/* Header */}
-            <header className="bg-[#111] border-b border-dark-border py-6 px-8 sticky top-0 z-40">
-                <div className="max-w-7xl mx-auto flex justify-between items-center">
-                    <div>
-                        <h1 className="text-2xl font-serif text-white tracking-wide">Staff Workspace</h1>
-                        <p className="text-brand-400 text-sm italic mt-1">Maintenance Operations</p>
-                    </div>
-                    <div className="flex items-center gap-6">
-                        <div className="text-right hidden md:block">
-                            <p className="text-xs text-gray-500 tracking-widest uppercase font-bold">Operator</p>
-                            <p className="text-gray-300 text-sm font-medium">{user?.name || 'Staff'}</p>
-                        </div>
-                        <button onClick={handleLogout} className="border border-brand-400 text-brand-400 hover:bg-brand-400 hover:text-dark transition-colors px-6 py-2 rounded-sm text-sm tracking-wide font-medium">
-                            Sign Out
-                        </button>
-                    </div>
+        <div className="max-w-7xl mx-auto">
+            <div className="flex justify-between items-end mb-8">
+                <div>
+                    <h1 className="text-3xl font-serif text-white tracking-wide">Staff Workspace</h1>
+                    <p className="text-brand-400 text-md italic mt-2">Maintenance Operations</p>
                 </div>
-            </header>
+                <div className="text-right hidden md:block">
+                    <p className="text-xs text-gray-500 tracking-widest uppercase font-bold">Operator</p>
+                    <p className="text-gray-300 text-md font-medium">{user?.name || 'Staff'}</p>
+                </div>
+            </div>
 
-            <main className="max-w-7xl mx-auto px-8 py-10">
+            <main>
                 {error && (
                     <div className="bg-red-900/30 border border-red-500/50 text-red-400 px-6 py-4 rounded-md mb-8 backdrop-blur-sm">
                         {error}
@@ -138,10 +169,15 @@ const MaintenanceDashboard = () => {
                 )}
 
                 {/* Dashboard Stats */}
-                <div className="grid grid-cols-3 gap-6 mb-12">
+                <div className="grid grid-cols-4 gap-6 mb-12">
+                    <div className="bg-dark/40 border border-dark-border rounded-xl p-6 flex flex-col items-center justify-center relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-blue-900/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <p className="text-gray-500 text-[11px] uppercase tracking-widest font-bold mb-2 z-10">Available</p>
+                        <p className="text-5xl font-serif text-blue-500 z-10">{availableTickets.length}</p>
+                    </div>
                     <div className="bg-dark/40 border border-dark-border rounded-xl p-6 flex flex-col items-center justify-center relative overflow-hidden group">
                         <div className="absolute inset-0 bg-yellow-900/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <p className="text-gray-500 text-[11px] uppercase tracking-widest font-bold mb-2 z-10">Queued / Open</p>
+                        <p className="text-gray-500 text-[11px] uppercase tracking-widest font-bold mb-2 z-10">My Queue</p>
                         <p className="text-5xl font-serif text-yellow-500 z-10">{openTickets.length}</p>
                     </div>
                     <div className="bg-dark/40 border border-brand-500/30 shadow-[0_0_15px_rgba(211,188,165,0.05)] rounded-xl p-6 flex flex-col items-center justify-center relative overflow-hidden group">
@@ -160,6 +196,13 @@ const MaintenanceDashboard = () => {
                 <div className="bg-dark/20 rounded-2xl border border-dark-border overflow-hidden">
                     {/* Tabs */}
                     <div className="flex border-b border-dark-border">
+                        <button
+                            onClick={() => setActiveTab('AVAILABLE')}
+                            className={`flex-1 py-4 text-sm font-medium tracking-wide uppercase transition-colors relative ${activeTab === 'AVAILABLE' ? 'text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-dark/50'}`}
+                        >
+                            Available Jobs <span className="ml-2 bg-blue-900/50 text-blue-500 px-2 rounded-full text-[10px]">{availableTickets.length}</span>
+                            {activeTab === 'AVAILABLE' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-500"></div>}
+                        </button>
                         <button
                             onClick={() => setActiveTab('OPEN')}
                             className={`flex-1 py-4 text-sm font-medium tracking-wide uppercase transition-colors relative ${activeTab === 'OPEN' ? 'text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-dark/50'}`}
@@ -191,6 +234,15 @@ const MaintenanceDashboard = () => {
                             </div>
                         ) : (
                             <>
+                                {activeTab === 'AVAILABLE' && (
+                                    availableTickets.length === 0 ? (
+                                        <div className="text-center text-gray-500 py-20 italic">No available jobs match your skills currently.</div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
+                                            {availableTickets.map(renderTicketCard)}
+                                        </div>
+                                    )
+                                )}
                                 {activeTab === 'OPEN' && (
                                     openTickets.length === 0 ? (
                                         <div className="text-center text-gray-500 py-20 italic">No open maintenance requests at this time.</div>

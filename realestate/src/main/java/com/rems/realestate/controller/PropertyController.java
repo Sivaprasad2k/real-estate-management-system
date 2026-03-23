@@ -1,11 +1,14 @@
 package com.rems.realestate.controller;
 
 import com.rems.realestate.dto.PropertyRequest;
+import com.rems.realestate.dto.PropertySearchRequest;
 import com.rems.realestate.dto.MarkRentedRequest;
+import com.rems.realestate.dto.RentalMetadataRequest;
 import com.rems.realestate.model.Property;
 import com.rems.realestate.model.PropertyPurpose;
 import com.rems.realestate.security.UserDetailsImpl;
 import com.rems.realestate.service.PropertyService;
+import com.rems.realestate.service.RecommendationEngine;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,6 +25,9 @@ public class PropertyController {
 
     @Autowired
     private PropertyService propertyService;
+
+    @Autowired
+    private RecommendationEngine recommendationEngine;
 
     @PreAuthorize("hasRole('USER')")
     @PostMapping
@@ -48,6 +54,32 @@ public class PropertyController {
             @RequestParam(required = false) Double minPrice,
             @RequestParam(required = false) Double maxPrice) {
         return ResponseEntity.ok(propertyService.searchProperties(city, purpose, minPrice, maxPrice));
+    }
+
+    @PostMapping("/advanced-search")
+    public ResponseEntity<List<Property>> advancedSearch(@RequestBody PropertySearchRequest request) {
+        return ResponseEntity.ok(propertyService.advancedSearch(request));
+    }
+
+    @GetMapping("/nearby")
+    public ResponseEntity<?> getNearbyProperties(
+            @RequestParam double longitude,
+            @RequestParam double latitude,
+            @RequestParam(defaultValue = "10") double distance) {
+        try {
+            List<Property> properties = propertyService.getNearbyProperties(longitude, latitude, distance);
+            return ResponseEntity.ok(properties);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/recommendations")
+    public ResponseEntity<List<Property>> getRecommendations(Authentication authentication,
+            @RequestParam(defaultValue = "10") int limit) {
+        String userId = ((UserDetailsImpl) authentication.getPrincipal()).getId();
+        return ResponseEntity.ok(recommendationEngine.getRecommendationsForUser(userId, limit));
     }
 
     @GetMapping("/{id}")
@@ -88,6 +120,46 @@ public class PropertyController {
     }
 
     @PreAuthorize("hasRole('USER')")
+    @PostMapping("/{id}/sale/initiate")
+    public ResponseEntity<?> initiateSale(@PathVariable String id,
+            @RequestParam(value = "buyerDetails", required = false) String buyerDetails,
+            @RequestParam(value = "file", required = false) org.springframework.web.multipart.MultipartFile file,
+            Authentication authentication) {
+        try {
+            String userId = ((UserDetailsImpl) authentication.getPrincipal()).getId();
+            String fileUrl = file != null ? "/uploads/" + file.getOriginalFilename() : "";
+            propertyService.initiateSale(id, userId, buyerDetails, fileUrl);
+            return ResponseEntity.ok("Sale initiated successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @PutMapping("/{id}/sale/approve")
+    public ResponseEntity<?> approveSale(@PathVariable String id, Authentication authentication) {
+        try {
+            String userId = ((UserDetailsImpl) authentication.getPrincipal()).getId();
+            propertyService.approveSale(id, userId);
+            return ResponseEntity.ok("Sale approved successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @PutMapping("/{id}/sale/reject")
+    public ResponseEntity<?> rejectSale(@PathVariable String id, Authentication authentication) {
+        try {
+            String userId = ((UserDetailsImpl) authentication.getPrincipal()).getId();
+            propertyService.rejectSale(id, userId);
+            return ResponseEntity.ok("Sale rejected successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PreAuthorize("hasRole('USER')")
     @PutMapping("/{id}/mark-sold")
     public ResponseEntity<?> markSold(@PathVariable String id,
             @Valid @RequestBody com.rems.realestate.dto.MarkSoldRequest request, Authentication authentication) {
@@ -108,6 +180,20 @@ public class PropertyController {
             String userId = ((UserDetailsImpl) authentication.getPrincipal()).getId();
             propertyService.markRented(id, userId, request);
             return ResponseEntity.ok("Property marked as rented");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @PutMapping("/{id}/rental-metadata")
+    public ResponseEntity<?> updateRentalMetadata(@PathVariable String id,
+            @Valid @RequestBody RentalMetadataRequest request,
+            Authentication authentication) {
+        try {
+            String userId = ((UserDetailsImpl) authentication.getPrincipal()).getId();
+            Property property = propertyService.updateRentalMetadata(id, userId, request);
+            return ResponseEntity.ok(property);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

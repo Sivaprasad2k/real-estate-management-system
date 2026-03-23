@@ -31,4 +31,14 @@ public class PropertyRequest {
     private List<String> amenities;
 
     private List<String> images;
+
+    private Integer bedrooms;
+
+    private Integer bathrooms;
+
+    private Double squareFootage;
+
+    private Double latitude;
+
+    private Double longitude;
 }

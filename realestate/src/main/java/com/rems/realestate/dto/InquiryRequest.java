@@ -7,4 +7,6 @@ import lombok.Data;
 public class InquiryRequest {
     @NotBlank
     private String message;
+
+    private boolean acceptedRentalRules;
 }

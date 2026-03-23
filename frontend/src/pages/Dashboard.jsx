@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Card from '../components/Card';
 import api from '../api/axios';
@@ -9,28 +9,66 @@ const Dashboard = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [properties, setProperties] = useState([]);
+    const [recommendedProperties, setRecommendedProperties] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    useEffect(() => {
-        const fetchProperties = async () => {
-            try {
-                const response = await api.get('/properties');
-                // Filter out properties owned by the current user
-                const filteredProperties = response.data.filter(
-                    property => property.ownerId !== user?.id
-                );
-                setProperties(filteredProperties);
-            } catch (err) {
-                console.error("Failed to fetch properties:", err);
-                setError("Could not load properties at this time.");
-            } finally {
-                setIsLoading(false);
+    const [searchParams] = useSearchParams();
+
+    const fetchProperties = async (filters, isNearby = false, coords = null) => {
+        setIsLoading(true);
+        try {
+            let response;
+            if (isNearby && coords) {
+                response = await api.get(`/properties/nearby?latitude=${coords.lat}&longitude=${coords.lng}&distance=20`);
+            } else {
+                response = await api.post('/properties/advanced-search', {
+                    ...filters,
+                    minPrice: filters.minPrice ? parseFloat(filters.minPrice) : null,
+                    maxPrice: filters.maxPrice ? parseFloat(filters.maxPrice) : null,
+                    purpose: filters.purpose || null,
+                    type: filters.type || null
+                });
+                // Fetch recommendations
+                const recRes = await api.get('/properties/recommendations?limit=3');
+                setRecommendedProperties(recRes.data.filter(p => p.ownerId !== user?.id));
             }
+            // Filter out properties owned by the current user
+            const filteredProperties = response.data.filter(
+                property => property.ownerId !== user?.id
+            );
+            setProperties(filteredProperties);
+        } catch (err) {
+            console.error("Failed to fetch properties:", err);
+            setError("Could not load properties at this time.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        const isNearby = searchParams.get('isNearby') === 'true';
+        const keyword = searchParams.get('keyword') || '';
+        const purpose = searchParams.get('purpose') || '';
+        const sortBy = searchParams.get('sortBy') || 'recommended';
+        const lat = searchParams.get('lat');
+        const lng = searchParams.get('lng');
+
+        const filters = {
+            keyword,
+            purpose,
+            type: null,
+            minPrice: null,
+            maxPrice: null,
+            sortBy
         };
 
-        fetchProperties();
-    }, []);
+        if (isNearby && lat && lng) {
+            fetchProperties(filters, true, { lat, lng });
+        } else {
+            fetchProperties(filters, false);
+        }
+    }, [searchParams]);
 
     return (
         <div className="flex gap-8 min-h-[calc(100vh-8rem)]">
@@ -38,6 +76,31 @@ const Dashboard = () => {
 
             {/* Main Content Pane */}
             <main className="flex-1">
+
+                {recommendedProperties.length > 0 && searchParams.get('isNearby') !== 'true' && !searchParams.get('keyword') && !searchParams.get('purpose') && (searchParams.get('sortBy') === 'recommended' || !searchParams.get('sortBy')) && (
+                    <div className="mb-10">
+                        <h2 className="text-xl font-serif text-brand-400 mb-4 tracking-wide">Recommended For You</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {recommendedProperties.map((property) => (
+                                <div
+                                    key={`rec-${property.id}`}
+                                    onClick={() => navigate(`/property/${property.id}`)}
+                                    className="bg-brand-400/10 rounded-md shadow-md hover:shadow-xl transition-all duration-300 border border-brand-400/30 cursor-pointer text-left flex flex-col h-full group"
+                                >
+                                    <div className="p-4 flex flex-col flex-1 relative">
+                                        <div className="absolute top-2 right-2 text-brand-300 text-xs tracking-widest uppercase font-bold">Featured</div>
+                                        <p className="text-xl font-serif text-brand-300 mb-1">
+                                            ₹{property.price ? property.price.toLocaleString() : 'N/A'}
+                                        </p>
+                                        <h3 className="text-md font-medium text-white mb-1 line-clamp-1 group-hover:text-brand-300 transition-colors">{property.title}</h3>
+                                        <p className="text-xs text-gray-400 tracking-wide">{property.city}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
 
 
                 {error && (

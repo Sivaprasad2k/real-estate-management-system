@@ -14,27 +14,33 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document(collection = "inquiries")
-public class Inquiry {
+@Document(collection = "sale_agreements")
+public class SaleAgreement {
 
     @Id
-    private String id;
+    private String agreementId;
 
     @Indexed
     private String propertyId;
 
     @Indexed
-    private String ownerId;
+    private String buyerId;
 
     @Indexed
-    private String senderId;
+    private String sellerId;
 
-    private String message;
+    private String uploadedBy;
+
+    private String fileName;
+
+    private String fileType;
+
+    private byte[] documentData;
 
     @Builder.Default
-    private boolean acceptedRentalRules = false;
+    private SaleAgreementStatus status = SaleAgreementStatus.PENDING_SELLER_APPROVAL;
 
     @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime uploadDate = LocalDateTime.now();
 
 }

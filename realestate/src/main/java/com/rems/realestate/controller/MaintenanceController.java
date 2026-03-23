@@ -58,6 +58,13 @@ public class MaintenanceController {
         return ResponseEntity.ok(maintenanceService.getStaffTickets(staffId));
     }
 
+    @PreAuthorize("hasRole('MAINTENANCE')")
+    @GetMapping("/available")
+    public ResponseEntity<List<MaintenanceTicketResponse>> getAvailableTickets(Authentication authentication) {
+        String staffId = ((UserDetailsImpl) authentication.getPrincipal()).getId();
+        return ResponseEntity.ok(maintenanceService.getAvailableTicketsForStaff(staffId));
+    }
+
     @PreAuthorize("hasRole('USER')")
     @PutMapping("/{ticketId}/assign/{staffId}")
     public ResponseEntity<?> assignStaff(@PathVariable String ticketId, @PathVariable String staffId,
@@ -95,5 +102,29 @@ public class MaintenanceController {
     @GetMapping("/admin")
     public ResponseEntity<List<MaintenanceTicketResponse>> getAllTickets() {
         return ResponseEntity.ok(maintenanceService.getAllTickets());
+    }
+
+    @PreAuthorize("hasRole('MAINTENANCE')")
+    @PutMapping("/{ticketId}/accept")
+    public ResponseEntity<?> acceptTicket(@PathVariable String ticketId, Authentication authentication) {
+        try {
+            String staffId = ((UserDetailsImpl) authentication.getPrincipal()).getId();
+            MaintenanceTicket ticket = maintenanceService.acceptTicket(ticketId, staffId);
+            return ResponseEntity.ok(ticket);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PreAuthorize("hasRole('MAINTENANCE')")
+    @PutMapping("/{ticketId}/cancel")
+    public ResponseEntity<?> cancelTicket(@PathVariable String ticketId, Authentication authentication) {
+        try {
+            String staffId = ((UserDetailsImpl) authentication.getPrincipal()).getId();
+            MaintenanceTicket ticket = maintenanceService.cancelTicket(ticketId, staffId);
+            return ResponseEntity.ok(ticket);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }

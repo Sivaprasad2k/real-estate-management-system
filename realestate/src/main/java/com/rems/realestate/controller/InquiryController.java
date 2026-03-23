@@ -27,7 +27,8 @@ public class InquiryController {
             Authentication authentication) {
         try {
             String loggedInUserId = ((UserDetailsImpl) authentication.getPrincipal()).getId();
-            Inquiry inquiry = inquiryService.createInquiry(propertyId, request.getMessage(), loggedInUserId);
+            Inquiry inquiry = inquiryService.createInquiry(propertyId, request.getMessage(), loggedInUserId,
+                    request.isAcceptedRentalRules());
             return new ResponseEntity<>(inquiry, HttpStatus.CREATED);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

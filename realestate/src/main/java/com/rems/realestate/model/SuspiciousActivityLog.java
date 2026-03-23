@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -14,27 +13,23 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document(collection = "inquiries")
-public class Inquiry {
+@Document(collection = "suspicious_activity_logs")
+public class SuspiciousActivityLog {
 
     @Id
     private String id;
 
-    @Indexed
+    private String activityType;
+
+    private String description;
+
+    private String userId;
+
     private String propertyId;
 
-    @Indexed
-    private String ownerId;
-
-    @Indexed
-    private String senderId;
-
-    private String message;
+    @Builder.Default
+    private LocalDateTime timestamp = LocalDateTime.now();
 
     @Builder.Default
-    private boolean acceptedRentalRules = false;
-
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
-
+    private boolean isResolved = false;
 }

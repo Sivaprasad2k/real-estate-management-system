@@ -35,7 +35,11 @@ public class UserDetailsImpl implements UserDetails {
     }
 
     public static UserDetailsImpl build(User user) {
-        List<GrantedAuthority> authorities = user.getRoles().stream()
+        java.util.Set<String> roles = user.getRoles();
+        if (roles == null || roles.isEmpty()) {
+            roles = java.util.Collections.singleton("ROLE_USER");
+        }
+        List<GrantedAuthority> authorities = roles.stream()
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
 
