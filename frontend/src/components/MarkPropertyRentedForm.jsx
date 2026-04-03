@@ -5,6 +5,7 @@ const MarkPropertyRentedForm = ({ propertyId, ownerId, onCancel, onSuccess }) =>
     const [formData, setFormData] = useState({
         tenantName: '',
         tenantPhone: '',
+        tenantEmail: '',
         rentAmount: '',
         startDate: ''
     });
@@ -25,6 +26,7 @@ const MarkPropertyRentedForm = ({ propertyId, ownerId, onCancel, onSuccess }) =>
                 ownerId,
                 tenantName: formData.tenantName,
                 tenantPhone: formData.tenantPhone,
+                tenantEmail: formData.tenantEmail ? formData.tenantEmail : null,
                 rentAmount: parseFloat(formData.rentAmount),
                 startDate: formData.startDate ? `${formData.startDate}T00:00:00` : null
             });
@@ -82,6 +84,19 @@ const MarkPropertyRentedForm = ({ propertyId, ownerId, onCancel, onSuccess }) =>
                             onChange={handleChange}
                             className="w-full bg-dark border border-dark-border rounded-md px-3 py-2.5 text-white focus:outline-none focus:border-brand-500 transition-colors"
                             placeholder="Phone Number"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wider">
+                            Tenant Email (Optional)
+                        </label>
+                        <input
+                            type="email"
+                            name="tenantEmail"
+                            value={formData.tenantEmail}
+                            onChange={handleChange}
+                            className="w-full bg-dark border border-dark-border rounded-md px-3 py-2.5 text-white focus:outline-none focus:border-brand-500 transition-colors"
+                            placeholder="Email Address"
                         />
                     </div>
                     <div>

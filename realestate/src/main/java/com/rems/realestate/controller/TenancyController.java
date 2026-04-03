@@ -27,6 +27,11 @@ public class TenancyController {
     @Autowired
     private PropertyRepository propertyRepository;
 
+    @GetMapping("/property/{propertyId}")
+    public ResponseEntity<?> getTenanciesByProperty(@PathVariable String propertyId) {
+        return ResponseEntity.ok(tenancyRepository.findByPropertyId(propertyId));
+    }
+
     @PreAuthorize("hasRole('USER')")
     @PostMapping
     public ResponseEntity<?> createTenancy(@Valid @RequestBody TenancyRequest request, Authentication authentication) {
@@ -51,7 +56,8 @@ public class TenancyController {
                     .propertyId(request.getPropertyId())
                     .ownerId(request.getOwnerId())
                     .tenantName(request.getTenantName())
-                    .tenantPhone(request.getTenantPhone())
+                    .tenantPhone(request.getTenantPhone() != null ? request.getTenantPhone().trim() : null)
+                    .tenantEmail(request.getTenantEmail())
                     .rentAmount(request.getRentAmount())
                     .startDate(request.getStartDate())
                     .status("ACTIVE")

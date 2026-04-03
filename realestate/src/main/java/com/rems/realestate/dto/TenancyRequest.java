@@ -27,6 +27,8 @@ public class TenancyRequest {
     @NotBlank(message = "Tenant phone is required")
     private String tenantPhone;
 
+    private String tenantEmail;
+
     @NotNull(message = "Rent amount is required")
     private Double rentAmount;
 

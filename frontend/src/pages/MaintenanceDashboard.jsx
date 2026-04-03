@@ -39,7 +39,8 @@ const MaintenanceDashboard = () => {
             const res = await api.put(`/maintenance/${ticketId}/status?status=${newStatus}`);
             setTickets(tickets.map(t => t.id === ticketId ? res.data : t));
         } catch (err) {
-            alert(err.response?.data || "Failed to update ticket status");
+            const msg = typeof err.response?.data === 'object' ? err.response?.data?.message : err.response?.data;
+            alert(msg || "Failed to update ticket status");
         }
     };
 
@@ -48,7 +49,8 @@ const MaintenanceDashboard = () => {
             await api.put(`/maintenance/${ticketId}/accept`);
             fetchTickets();
         } catch (err) {
-            alert(err.response?.data || "Failed to accept ticket");
+            const msg = typeof err.response?.data === 'object' ? err.response?.data?.message : err.response?.data;
+            alert(msg || "Failed to accept ticket");
         }
     };
 
@@ -57,7 +59,8 @@ const MaintenanceDashboard = () => {
             await api.put(`/maintenance/${ticketId}/cancel`);
             fetchTickets();
         } catch (err) {
-            alert(err.response?.data || "Failed to cancel ticket");
+            const msg = typeof err.response?.data === 'object' ? err.response?.data?.message : err.response?.data;
+            alert(msg || "Failed to cancel ticket");
         }
     };
 
@@ -129,7 +132,7 @@ const MaintenanceDashboard = () => {
                     )}
                     {tickets.find(t => t.id === ticket.id) && ticket.status === 'IN_PROGRESS' && (
                         <button
-                            onClick={() => handleUpdateStatus(ticket.id, 'RESOLVED')}
+                            onClick={() => handleUpdateStatus(ticket.id, 'COMPLETED')}
                             className="w-full bg-green-600/90 text-white font-medium py-2 rounded shadow-sm hover:bg-green-500 transition-colors tracking-wide text-sm"
                         >
                             Mark Resolved

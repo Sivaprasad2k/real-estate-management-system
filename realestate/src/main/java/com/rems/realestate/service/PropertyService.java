@@ -136,7 +136,8 @@ public class PropertyService {
 
     public List<Property> advancedSearch(PropertySearchRequest request) {
         Query query = new Query();
-        query.addCriteria(Criteria.where("status").is(PropertyStatus.APPROVED));
+        query.addCriteria(
+                Criteria.where("status").in(PropertyStatus.APPROVED, PropertyStatus.RENTED, PropertyStatus.SOLD));
 
         if (request.getKeyword() != null && !request.getKeyword().isEmpty()) {
             Criteria keywordCriteria = new Criteria().orOperator(

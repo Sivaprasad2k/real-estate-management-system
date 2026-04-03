@@ -134,9 +134,9 @@ const Dashboard = () => {
                                     <span className={`absolute top-4 left-4 px-3 py-1 rounded-sm text-[10px] uppercase font-semibold tracking-wider border backdrop-blur-md ${property.purpose === 'RENT' ? 'bg-brand-400/20 text-brand-300 border-brand-400/30' : 'bg-dark/60 text-gray-300 border-gray-600/50'}`}>
                                         For {property.purpose === 'RENT' ? 'Rent' : 'Sale'}
                                     </span>
-                                    {property.propertyStatus !== 'AVAILABLE' && (
+                                    {property.status && property.status !== 'AVAILABLE' && property.status !== 'APPROVED' && (
                                         <span className="absolute top-4 right-4 bg-red-900/60 text-red-200 border border-red-500/30 backdrop-blur-md px-3 py-1 rounded-sm text-[10px] uppercase font-semibold tracking-wider">
-                                            {property.propertyStatus}
+                                            {property.status}
                                         </span>
                                     )}
                                 </div>

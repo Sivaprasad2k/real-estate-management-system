@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../api/axios';
 
 const MAINTENANCE_SKILLS = ['PLUMBING', 'ELECTRICAL', 'CARPENTRY', 'HVAC', 'GENERAL', 'APPLIANCE'];
 
 const GuestMaintenance = () => {
     const navigate = useNavigate();
+    const location = useLocation();
 
     const [formData, setFormData] = useState({
-        propertyId: '',
+        propertyId: location.state?.propertyId || '',
         tenantPhone: '',
         title: '',
         description: '',
@@ -31,7 +32,7 @@ const GuestMaintenance = () => {
         setStatus({ type: '', message: '' });
 
         try {
-            await api.post(`/guest/maintenance?tenantPhone=${formData.tenantPhone}`, {
+            await api.post(`/guest/maintenance?tenantPhone=${encodeURIComponent(formData.tenantPhone)}`, {
                 propertyId: formData.propertyId,
                 title: formData.title,
                 description: formData.description,
@@ -75,8 +76,8 @@ const GuestMaintenance = () => {
 
                 {status.message && (
                     <div className={`p-4 rounded-md mb-6 border ${status.type === 'success'
-                            ? 'bg-green-900/20 border-green-900/50 text-green-400'
-                            : 'bg-red-900/20 border-red-900/50 text-red-400'
+                        ? 'bg-green-900/20 border-green-900/50 text-green-400'
+                        : 'bg-red-900/20 border-red-900/50 text-red-400'
                         }`}>
                         {status.message}
                     </div>

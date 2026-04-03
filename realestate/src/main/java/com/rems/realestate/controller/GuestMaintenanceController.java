@@ -5,7 +5,6 @@ import com.rems.realestate.dto.MaintenanceTicketRequest;
 import com.rems.realestate.model.MaintenanceTicket;
 import com.rems.realestate.model.Tenancy;
 import com.rems.realestate.repository.TenancyRepository;
-import com.rems.realestate.service.TenantMaintenanceService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -31,8 +30,13 @@ public class GuestMaintenanceController {
             @RequestParam String tenantPhone) {
         try {
             // Validate the user's phone number against the active tenancy for this property
-            Optional<Tenancy> tenancyObj = tenancyRepository
-                    .findFirstByPropertyIdAndTenantPhone(request.getPropertyId(), tenantPhone);
+            String cleanedPhone = tenantPhone.trim();
+            // Flexible match: trim stored phone numbers to handle existing records with
+            // trailing whitespace
+            Optional<Tenancy> tenancyObj = tenancyRepository.findByPropertyId(request.getPropertyId())
+                    .stream()
+                    .filter(t -> t.getTenantPhone() != null && t.getTenantPhone().trim().equals(cleanedPhone))
+                    .findFirst();
 
             if (tenancyObj.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)

@@ -354,11 +354,12 @@ const PropertyDetail = () => {
                     )}
                     {user?.id !== property.ownerId && property.status === 'RENTED' && (
                         <div className="mt-8 pt-6 border-t border-dark-border">
-                            <MaintenanceRequestForm
-                                propertyId={property.id}
-                                tenantName={user?.username || 'Tenant'}
-                                onSuccess={() => { }}
-                            />
+                            <button
+                                onClick={() => navigate('/guest-maintenance', { state: { propertyId: property.id } })}
+                                className="w-full bg-brand-500 hover:bg-brand-600 text-dark font-medium py-3.5 px-6 rounded-sm shadow-md transition-colors text-center text-[13px] tracking-widest uppercase items-center justify-center flex gap-2"
+                            >
+                                Raise Maintenance Request
+                            </button>
                         </div>
                     )}
                     {user?.id === property.ownerId && property.status === 'APPROVED' && property.purpose === 'RENT' && (
