@@ -1,0 +1,32 @@
+# IDE Files
+.idea/
+.vscode/
+
+# Java / Spring Boot
+target/
+*.class
+*.jar
+*.war
+
+# Node
+node_modules/
+
+# Logs
+*.log
+
+# Environment Variables
+.env
+
+# Build Files
+dist/
+build/
+
+# IntelliJ
+*.iml
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+Commit message
+Add .gitignore
