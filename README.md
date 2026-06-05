@@ -335,11 +335,11 @@ This project provided practical experience with:
 ## Authors
 
 ### Siva Prasad
-LinkedIn: https://www.linkedin.com/in/sivaprasadml
+LinkedIn: https://www.linkedin.com/in/sivaprasadml |
 GitHub: https://github.com/Sivaprasad2k
 
 ### Ritharaj P
-LinkedIn: linkedin.com/in/ritharaj-p-267987293
+LinkedIn: linkedin.com/in/ritharaj-p-267987293 |
 Github: https://github.com/Ritha-blip
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
