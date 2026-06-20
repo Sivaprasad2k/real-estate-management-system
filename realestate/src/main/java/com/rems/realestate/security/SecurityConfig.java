@@ -25,7 +25,7 @@ import org.springframework.beans.factory.annotation.Value;
 public class SecurityConfig {
 
     @Value("${cors.allowed-origins:http://localhost:5173}")
-    private List<String> allowedOrigins;
+    private String allowedOrigins;
 
     @Autowired
     UserDetailsServiceImpl userDetailsService;
@@ -59,10 +59,17 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        if (allowedOrigins != null && allowedOrigins.contains("*")) {
+        List<String> origins = allowedOrigins != null
+                ? java.util.Arrays.stream(allowedOrigins.split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .collect(java.util.stream.Collectors.toList())
+                : List.of("http://localhost:5173");
+
+        if (origins.contains("*")) {
             configuration.setAllowedOriginPatterns(List.of("*"));
         } else {
-            configuration.setAllowedOrigins(allowedOrigins);
+            configuration.setAllowedOrigins(origins);
         }
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
