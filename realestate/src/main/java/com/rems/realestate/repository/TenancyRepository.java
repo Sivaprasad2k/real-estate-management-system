@@ -13,5 +13,7 @@ public interface TenancyRepository extends MongoRepository<Tenancy, String> {
 
     Optional<Tenancy> findFirstByPropertyIdAndTenantPhone(String propertyId, String tenantPhone);
 
+    Optional<Tenancy> findFirstByPropertyIdAndTenantCode(String propertyId, String tenantCode);
+
     List<Tenancy> findByOwnerId(String ownerId);
 }

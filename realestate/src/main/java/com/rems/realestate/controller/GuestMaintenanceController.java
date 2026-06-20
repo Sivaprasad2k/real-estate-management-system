@@ -25,24 +25,25 @@ public class GuestMaintenanceController {
     private com.rems.realestate.service.MaintenanceService maintenanceService;
 
     // Unsecured endpoint allowing guests (tenants) to create maintenance requests
-    // using their phone number
+    // using their unique verification code
     @PostMapping
     public ResponseEntity<?> createGuestMaintenanceRequest(@Valid @RequestBody TenantMaintenanceDto request,
-            @RequestParam String tenantPhone) {
+            @RequestParam String tenantCode) {
         try {
-            // Validate the user's phone number against the active tenancy for this property
+            // Validate the user's unique verification code against the active tenancy for this property
             Optional<Tenancy> tenancyObj = tenancyRepository
-                    .findFirstByPropertyIdAndTenantPhone(request.getPropertyId(), tenantPhone);
+                    .findFirstByPropertyIdAndTenantCode(request.getPropertyId(), tenantCode);
 
             if (tenancyObj.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body("Verification failed. No active tenancy matches this property and phone number.");
+                        .body("Verification failed. No active tenancy matches this property and verification code.");
             }
 
             MaintenanceTicketRequest ticketRequest = new MaintenanceTicketRequest();
             ticketRequest.setTitle(request.getTitle());
             ticketRequest.setDescription(request.getDescription());
             ticketRequest.setType(request.getType());
+            ticketRequest.setPriority(request.getPriority());
 
             MaintenanceTicket createdRequest = maintenanceService.createGuestTicket(request.getPropertyId(),
                     ticketRequest, tenancyObj.get());

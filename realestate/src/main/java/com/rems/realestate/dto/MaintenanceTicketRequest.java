@@ -20,4 +20,6 @@ public class MaintenanceTicketRequest {
     private String description;
 
     private MaintenanceType type;
+
+    private String priority;
 }

@@ -15,4 +15,6 @@ public interface RentalAgreementRepository extends MongoRepository<RentalAgreeme
     List<RentalAgreement> findByTenantId(String tenantId);
 
     List<RentalAgreement> findByOwnerId(String ownerId);
+
+    List<RentalAgreement> findByPropertyId(String propertyId);
 }

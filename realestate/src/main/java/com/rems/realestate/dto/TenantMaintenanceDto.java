@@ -25,4 +25,6 @@ public class TenantMaintenanceDto {
     private String description;
 
     private MaintenanceType type;
+
+    private String priority;
 }

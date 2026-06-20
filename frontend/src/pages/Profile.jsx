@@ -13,13 +13,7 @@ const Profile = () => {
     });
     const [message, setMessage] = useState({ type: '', text: '' });
     const [loading, setLoading] = useState(true);
-    const [theme, setTheme] = useState(localStorage.getItem('app-theme') || 'dark');
 
-    const handleThemeChange = (newTheme) => {
-        setTheme(newTheme);
-        localStorage.setItem('app-theme', newTheme);
-        document.documentElement.setAttribute('data-theme', newTheme);
-    };
 
     useEffect(() => {
         fetchProfile();
@@ -176,33 +170,14 @@ const Profile = () => {
                         )}
                     </div>
 
-                    {/* Preferences Section */}
-                    <div className="pt-6 mt-6 border-t border-dark-border">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-semibold">Preferences</h2>
-                        </div>
-                        <div className="grid grid-cols-1 gap-6">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-400">Application Theme</label>
-                                    <p className="text-xs text-gray-500 mt-1">Switch between Dark and Light mode.</p>
-                                </div>
-                                <div className="flex bg-[#121212] rounded-lg p-1 border border-dark-border self-start sm:self-auto">
-                                    <button
-                                        onClick={() => handleThemeChange('dark')}
-                                        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${theme === 'dark' ? 'bg-brand-600 text-white' : 'text-gray-400 hover:text-white'}`}
-                                    >
-                                        Dark Mode
-                                    </button>
-                                    <button
-                                        onClick={() => handleThemeChange('light')}
-                                        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${theme === 'light' ? 'bg-brand-600 text-white' : 'text-gray-400 hover:text-white'}`}
-                                    >
-                                        Light Mode
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                    <div className="pt-6 border-t border-dark-border/40 flex justify-between items-center mt-8">
+                        <span className="text-xs text-gray-500">Need to sign out?</span>
+                        <button
+                            onClick={logout}
+                            className="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 text-xs font-bold tracking-widest uppercase px-6 py-2.5 rounded-lg transition-all duration-300 cursor-pointer"
+                        >
+                            Log Out
+                        </button>
                     </div>
                 </div>
             </Card>

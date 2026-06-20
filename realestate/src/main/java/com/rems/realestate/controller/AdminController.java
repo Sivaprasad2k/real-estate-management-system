@@ -56,24 +56,42 @@ public class AdminController {
     private MaintenanceService maintenanceService;
 
     @Autowired
+    private com.rems.realestate.service.NotificationService notificationService;
+
+    @Autowired
     private SuspiciousActivityLogRepository suspiciousLogRepository;
 
     @GetMapping("/stats")
     public ResponseEntity<SystemStatsResponse> getSystemStats() {
         long totalUsers = userRepository.count();
         long totalProperties = propertyRepository.count();
-        long activeReports = reportRepository.count(); // Could optionally filter by status if needed
-        long activeTickets = ticketRepository.count(); // Could filter by PENNDING status to be perfectly exact
+        long activeReports = reportRepository.count(); 
+        long activeTickets = ticketRepository.count(); 
+
+        List<Property> allProperties = propertyRepository.findAll();
+        long activeRentals = allProperties.stream()
+                .filter(p -> p.getStatus() == com.rems.realestate.model.PropertyStatus.RENTED 
+                          || p.getStatus() == com.rems.realestate.model.PropertyStatus.RENT_IN_PROGRESS
+                          || p.getStatus() == com.rems.realestate.model.PropertyStatus.PENDING_TENANT_CONFIRMATION)
+                .count();
+        long activeSales = allProperties.stream()
+                .filter(p -> p.getStatus() == com.rems.realestate.model.PropertyStatus.SOLD 
+                          || p.getStatus() == com.rems.realestate.model.PropertyStatus.SALE_IN_PROGRESS
+                          || p.getStatus() == com.rems.realestate.model.PropertyStatus.PENDING_BUYER_CONFIRMATION)
+                .count();
 
         SystemStatsResponse stats = SystemStatsResponse.builder()
                 .totalUsers(totalUsers)
                 .totalProperties(totalProperties)
                 .activeReports(activeReports)
                 .activeTickets(activeTickets)
+                .activeRentals(activeRentals)
+                .activeSales(activeSales)
                 .build();
 
         return ResponseEntity.ok(stats);
     }
+
 
     @GetMapping("/users")
     public ResponseEntity<List<User>> getAllUsers() {
@@ -159,4 +177,43 @@ public class AdminController {
     public ResponseEntity<List<SuspiciousActivityLog>> getSuspiciousLogs() {
         return ResponseEntity.ok(suspiciousLogRepository.findAll());
     }
+
+    @PutMapping("/properties/{id}/featured")
+    public ResponseEntity<?> toggleFeaturedProperty(@PathVariable String id, @RequestParam boolean featured) {
+        try {
+            Property property = propertyRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Property not found"));
+            property.setPromoted(featured);
+            Property saved = propertyRepository.save(property);
+            return ResponseEntity.ok(saved);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/users/{id}/skills")
+    public ResponseEntity<?> updateStaffSkills(@PathVariable String id, @RequestBody List<String> skills) {
+        try {
+            User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+            if (!user.getRoles().contains("ROLE_MAINTENANCE")) {
+                return ResponseEntity.badRequest().body("User is not a maintenance staff member");
+            }
+            if (skills == null || skills.isEmpty()) {
+                return ResponseEntity.badRequest().body("At least one technical skill is required for maintenance staff.");
+            }
+            List<com.rems.realestate.model.MaintenanceType> newSkills = skills.stream()
+                .map(s -> com.rems.realestate.model.MaintenanceType.valueOf(s.toUpperCase()))
+                .collect(java.util.stream.Collectors.toList());
+            user.setSkills(newSkills);
+            User saved = userRepository.save(user);
+            notificationService.createNotification(id, "Your technical skills have been updated by the Administrator: " + skills.toString(), "MAINTENANCE");
+            return ResponseEntity.ok(saved);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Invalid skill name provided");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }
+

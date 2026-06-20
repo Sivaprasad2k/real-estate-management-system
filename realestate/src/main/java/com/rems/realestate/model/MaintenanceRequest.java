@@ -41,5 +41,8 @@ public class MaintenanceRequest {
     private String status = "OPEN"; // Allowed: OPEN, IN_PROGRESS, RESOLVED
 
     @Builder.Default
+    private String priority = "MEDIUM"; // LOW, MEDIUM, HIGH
+
+    @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 }

@@ -84,4 +84,51 @@ public class RentalAgreementController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @PreAuthorize("hasRole('USER')")
+    @PostMapping("/upload")
+    public ResponseEntity<?> uploadLeaseAgreement(
+            @RequestParam("propertyId") String propertyId,
+            @RequestParam(value = "tenantId", required = false) String tenantId,
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            Authentication authentication) {
+        try {
+            String userId = ((UserDetailsImpl) authentication.getPrincipal()).getId();
+            RentalAgreement agreement = rentalAgreementService.uploadLeaseAgreement(propertyId, tenantId, file, userId);
+            return ResponseEntity.ok(agreement);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @PostMapping("/{propertyId}/verify")
+    public ResponseEntity<?> verifyLease(@PathVariable String propertyId, Authentication authentication) {
+        try {
+            String tenantId = ((UserDetailsImpl) authentication.getPrincipal()).getId();
+            RentalAgreement agreement = rentalAgreementService.confirmLease(propertyId, tenantId);
+            return ResponseEntity.ok(agreement);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/{propertyId}/document")
+    public ResponseEntity<byte[]> downloadDocument(@PathVariable String propertyId) {
+        try {
+            RentalAgreement agreement = rentalAgreementService.getAgreementDetails(propertyId);
+            if (agreement.getDocumentData() == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok()
+                    .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + agreement.getFileName() + "\"")
+                    .header(org.springframework.http.HttpHeaders.CONTENT_TYPE, agreement.getFileType())
+                    .body(agreement.getDocumentData());
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

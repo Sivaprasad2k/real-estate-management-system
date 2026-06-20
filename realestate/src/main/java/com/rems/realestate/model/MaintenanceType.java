@@ -5,5 +5,7 @@ public enum MaintenanceType {
     ELECTRICAL,
     HVAC,
     APPLIANCE,
-    GENERAL
+    GENERAL,
+    CARPENTRY,
+    CLEANING
 }

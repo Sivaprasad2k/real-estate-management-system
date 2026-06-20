@@ -41,4 +41,14 @@ public class PropertyRequest {
     private Double latitude;
 
     private Double longitude;
+
+    private Integer propertyAge;
+
+    private Integer parkingCount;
+
+    private String furnishingStatus;
+
+    private String ownershipType;
+
+    private java.time.LocalDateTime availabilityDate;
 }

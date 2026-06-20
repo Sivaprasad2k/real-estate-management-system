@@ -22,11 +22,19 @@ public class MaintenanceTicketResponse {
     private String ownerId;
     private String ownerName;
     private String staffId;
+    private String propertyAddress;
 
     private String title;
     private String description;
     private MaintenanceType type;
     private MaintenanceTicketStatus status;
+    private String priority;
+    private String resolutionSummary;
+    private java.util.List<String> beforeRepairPhotos;
+    private java.util.List<String> afterRepairPhotos;
+    private java.util.List<com.rems.realestate.model.MaintenanceTicket.TimelineEntry> timeline;
+    private int reopenedCount;
+    private LocalDateTime slaDeadline;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

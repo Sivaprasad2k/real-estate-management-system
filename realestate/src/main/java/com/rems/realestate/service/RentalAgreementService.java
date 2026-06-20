@@ -92,4 +92,74 @@ public class RentalAgreementService {
     public List<RentalAgreement> getAllAgreements() {
         return rentalAgreementRepository.findAll();
     }
+
+    public RentalAgreement uploadLeaseAgreement(String propertyId, String tenantId,
+            org.springframework.web.multipart.MultipartFile file, String userId) throws java.io.IOException {
+        Property property = propertyRepository.findById(propertyId)
+                .orElseThrow(() -> new RuntimeException("Property not found"));
+
+        if (property.getStatus() != PropertyStatus.RENT_IN_PROGRESS) {
+            throw new RuntimeException("Lease agreement upload is only allowed when property status is RENT_IN_PROGRESS");
+        }
+
+        if (!property.getOwnerId().equals(userId)) {
+            throw new RuntimeException("Only the property owner can upload the lease agreement.");
+        }
+
+        RentalAgreement agreement = rentalAgreementRepository.findByPropertyIdAndStatus(propertyId, RentalAgreementStatus.ACTIVE)
+                .orElse(null);
+
+        if (agreement == null) {
+            String agreementNumber = "RA-" + java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+            agreement = RentalAgreement.builder()
+                    .propertyId(propertyId)
+                    .ownerId(property.getOwnerId())
+                    .tenantId(tenantId != null && !tenantId.isEmpty() ? tenantId : property.getTenantId())
+                    .agreementNumber(agreementNumber)
+                    .monthlyRent(property.getPrice())
+                    .securityDeposit(property.getPrice() * 2)
+                    .status(RentalAgreementStatus.ACTIVE)
+                    .build();
+        }
+
+        agreement.setFileName(file.getOriginalFilename());
+        agreement.setFileType(file.getContentType());
+        agreement.setDocumentData(file.getBytes());
+        agreement.setDocumentUrl("/api/rentals/" + propertyId + "/document");
+
+        RentalAgreement saved = rentalAgreementRepository.save(agreement);
+
+        property.setStatus(PropertyStatus.PENDING_TENANT_CONFIRMATION);
+        propertyRepository.save(property);
+
+        return saved;
+    }
+
+    public RentalAgreement confirmLease(String propertyId, String tenantId) {
+        Property property = propertyRepository.findById(propertyId)
+                .orElseThrow(() -> new RuntimeException("Property not found"));
+
+        if (property.getStatus() != PropertyStatus.PENDING_TENANT_CONFIRMATION) {
+            throw new RuntimeException("Property is not in PENDING_TENANT_CONFIRMATION status");
+        }
+
+        if (property.getTenantId() == null || !property.getTenantId().equals(tenantId)) {
+            throw new RuntimeException("Only the designated tenant can confirm this lease agreement");
+        }
+
+        RentalAgreement agreement = rentalAgreementRepository.findByPropertyIdAndStatus(propertyId, RentalAgreementStatus.ACTIVE)
+                .orElseThrow(() -> new RuntimeException("No active rental agreement found to confirm"));
+
+        agreement.setTermsAccepted(true);
+        agreement.setPaymentStatus(com.rems.realestate.model.PaymentStatus.PAID);
+        rentalAgreementRepository.save(agreement);
+
+        property.setStatus(PropertyStatus.RENTED);
+        property.setTransactionName("Tenant ID: " + agreement.getTenantId());
+        property.setTransactionAmount(property.getPrice());
+        propertyRepository.save(property);
+
+        return agreement;
+    }
+
 }

@@ -16,6 +16,7 @@ import MyInquiries from './pages/MyInquiries';
 import MyMaintenance from './pages/MyMaintenance';
 import Profile from './pages/Profile';
 import GuestMaintenance from './pages/GuestMaintenance';
+import MyTransactions from './pages/MyTransactions';
 import './index.css';
 
 function App() {
@@ -64,6 +65,11 @@ function App() {
             <Route path="/profile" element={
               <ProtectedRoute requiredRole="ROLE_USER">
                 <Profile />
+              </ProtectedRoute>
+            } />
+            <Route path="/my-transactions" element={
+              <ProtectedRoute requiredRole="ROLE_USER">
+                <MyTransactions />
               </ProtectedRoute>
             } />
 

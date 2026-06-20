@@ -17,5 +17,6 @@ public class UserResponse {
     private String email;
     private String phoneNumber;
     private String address;
+    private java.util.List<com.rems.realestate.model.MaintenanceType> skills;
     private LocalDateTime createdAt;
 }

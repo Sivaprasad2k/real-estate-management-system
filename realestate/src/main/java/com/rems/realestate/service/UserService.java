@@ -23,8 +23,12 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
 
     public void registerMaintenanceStaff(StaffRegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmailIgnoreCase(request.getEmail())) {
             throw new RuntimeException("Email is already in use!");
+        }
+
+        if (request.getSkills() == null || request.getSkills().isEmpty()) {
+            throw new RuntimeException("At least one technical skill is required to register maintenance staff.");
         }
 
         Set<String> roles = new HashSet<>();
@@ -47,7 +51,7 @@ public class UserService {
     }
 
     public UserResponse getUserProfile(String email) {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         return UserResponse.builder()
@@ -56,6 +60,7 @@ public class UserService {
                 .email(user.getEmail())
                 .phoneNumber(user.getPhoneNumber())
                 .address(user.getAddress())
+                .skills(user.getSkills())
                 .createdAt(user.getCreatedAt())
                 .build();
     }
@@ -70,12 +75,13 @@ public class UserService {
                 .email(user.getEmail())
                 .phoneNumber(user.getPhoneNumber())
                 .address(user.getAddress())
+                .skills(user.getSkills())
                 .createdAt(user.getCreatedAt())
                 .build();
     }
 
     public UserResponse updateUserProfile(String email, UserUpdateRequest request) {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (request.getPhoneNumber() != null) {
@@ -93,6 +99,7 @@ public class UserService {
                 .email(user.getEmail())
                 .phoneNumber(user.getPhoneNumber())
                 .address(user.getAddress())
+                .skills(user.getSkills())
                 .createdAt(user.getCreatedAt())
                 .build();
     }

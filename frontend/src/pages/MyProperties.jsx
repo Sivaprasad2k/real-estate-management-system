@@ -39,47 +39,83 @@ const MyProperties = () => {
 
                 {isLoading ? (
                     <div className="flex justify-center items-center py-20">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600"></div>
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
                     </div>
                 ) : myProperties.length === 0 ? (
-                    <Card>
-                        <p className="text-gray-400 py-4">You haven't listed any properties for sale or rent yet.</p>
-                    </Card>
+                    /* Phase 10: Empty State */
+                    <div className="bg-dark-card border border-dark-border rounded-xl p-10 text-center flex flex-col items-center justify-center space-y-4">
+                        <div className="p-4 bg-dark border border-dark-border text-dark-muted rounded-full">
+                            <svg className="w-10 h-10 text-dark-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m-14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 className="text-white text-lg font-serif tracking-wide font-semibold">No Properties Listed</h3>
+                            <p className="text-xs text-dark-muted mt-1 max-w-sm mx-auto">You haven't listed any properties for sale or rent on the hub yet.</p>
+                        </div>
+                        <button
+                            onClick={() => navigate('/add-property')}
+                            className="btn-primary py-2.5 px-6 text-xs cursor-pointer"
+                        >
+                            List Your First Property
+                        </button>
+                    </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {myProperties.map((property) => (
-                            <div
-                                key={property.id}
-                                onClick={() => navigate(`/property/${property.id}`)}
-                                className="bg-dark-card rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow border border-dark-border cursor-pointer flex flex-col h-full"
-                            >
-                                <div className="h-40 bg-[#111] relative shrink-0">
-                                    {property.images && property.images.length > 0 ? (
-                                        <img src={property.images[0]} alt={property.title} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">
-                                            <span>[No Image]</span>
-                                        </div>
-                                    )}
-                                    <span className={`absolute top-2 left-2 px-2 py-0.5 rounded-sm text-[10px] font-bold shadow-sm uppercase tracking-wider backdrop-blur-md ${property.purpose === 'RENT' ? 'bg-brand-400/20 text-brand-300 border border-brand-400/30' : 'bg-dark/80 text-gray-200 border border-dark-border'}`}>
-                                        For {property.purpose === 'RENT' ? 'Rent' : 'Sale'}
-                                    </span>
-                                    {property.status && property.status !== 'APPROVED' && (
-                                        <span className="absolute top-2 right-2 bg-red-900/60 text-red-200 border border-red-500/30 backdrop-blur-md px-2 py-0.5 rounded-sm text-[10px] font-bold uppercase">
-                                            {property.status}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {myProperties.map((property) => {
+                            const getStatusColor = (status) => {
+                                switch (status) {
+                                    case 'AVAILABLE':
+                                    case 'APPROVED':
+                                        return 'bg-success/10 text-success border-success/30';
+                                    case 'RENTED':
+                                        return 'bg-blue-500/10 text-blue-400 border-blue-500/30';
+                                    case 'SOLD':
+                                        return 'bg-error/10 text-error border-error/30';
+                                    case 'PENDING':
+                                    case 'PENDING_BUYER_CONFIRMATION':
+                                    case 'PENDING_OWNER_CONFIRMATION':
+                                        return 'bg-warning/10 text-warning border-warning/30';
+                                    default:
+                                        return 'bg-gray-800 text-gray-400 border-gray-700';
+                                }
+                            };
+
+                            return (
+                                <div
+                                    key={property.id}
+                                    onClick={() => navigate(`/property/${property.id}`)}
+                                    className="bg-dark-card rounded-xl overflow-hidden hover:shadow-[0_8px_30px_rgba(0,0,0,0.6)] transition-all duration-300 border border-dark-border hover:border-brand/35 cursor-pointer flex flex-col h-full group"
+                                >
+                                    <div className="h-44 bg-[#0B0B0B] relative shrink-0 overflow-hidden border-b border-dark-border">
+                                        {property.images && property.images.length > 0 ? (
+                                            <img src={property.images[0]} alt={property.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                        ) : (
+                                            <div className="absolute inset-0 flex items-center justify-center text-dark-muted font-light text-xs bg-dark">
+                                                <span className="opacity-40 tracking-widest">[NO IMAGES]</span>
+                                            </div>
+                                        )}
+                                        <span className={`absolute top-3 left-3 border backdrop-blur-md px-2.5 py-1 rounded text-[9px] uppercase font-bold tracking-wider ${getStatusColor(property.status)}`}>
+                                            {property.status === 'APPROVED' || property.status === 'AVAILABLE' ? 'Available' : property.status.replace('_', ' ')}
                                         </span>
-                                    )}
+                                        <span className="absolute bottom-3 right-3 bg-dark/75 border border-dark-border backdrop-blur-md px-2 py-0.5 rounded-sm text-[9px] font-bold uppercase text-brand tracking-widest">
+                                            For {property.purpose === 'RENT' ? 'Rent' : 'Sale'}
+                                        </span>
+                                    </div>
+                                    <div className="p-5 flex flex-col flex-1 relative space-y-3">
+                                        <p className="text-xl font-serif text-brand font-bold">
+                                            ₹{property.price ? property.price.toLocaleString() : 'N/A'}
+                                            {property.purpose === 'RENT' && <span className="text-[10px] text-dark-muted font-sans font-normal tracking-wide"> / mo</span>}
+                                        </p>
+                                        <h3 className="text-md font-medium text-white line-clamp-1 group-hover:text-brand transition-colors font-serif leading-snug">{property.title}</h3>
+                                        <p className="text-xs text-dark-muted flex items-center gap-1">
+                                            <svg className="w-3.5 h-3.5 text-brand shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /></svg>
+                                            {property.city}, {property.state}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="p-4 flex flex-col flex-1">
-                                    <p className="text-xl font-serif text-brand-400 mb-1">
-                                        ₹{property.price ? property.price.toLocaleString() : 'N/A'}
-                                        {property.purpose === 'RENT' && <span className="text-xs text-gray-500 font-sans tracking-wide"> / mo</span>}
-                                    </p>
-                                    <h3 className="text-md font-medium text-white mb-2 line-clamp-1">{property.title}</h3>
-                                    <p className="text-xs text-gray-400">{property.city} • {property.bedrooms} Beds</p>
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </main>

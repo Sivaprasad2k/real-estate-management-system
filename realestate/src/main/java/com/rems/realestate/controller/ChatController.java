@@ -39,6 +39,8 @@ public class ChatController {
     @Autowired
     private UserRepository userRepository;
 
+    private static final java.util.Map<String, LocalDateTime> activeTypingStatus = new java.util.concurrent.ConcurrentHashMap<>();
+
     @PreAuthorize("isAuthenticated()")
     @PostMapping
     public ResponseEntity<Message> sendMessage(@Valid @RequestBody MessageRequest request,
@@ -55,55 +57,7 @@ public class ChatController {
                 .build();
 
         Message savedMessage = messageRepository.save(message);
-
-        // --- CHAT BOT AUTO-REPLY LOGIC ---
-        // If the sender is not the owner, generate an automated response on behalf of
-        // the owner
-        Property property = propertyRepository.findById(request.getPropertyId()).orElse(null);
-        if (property != null && !senderId.equals(property.getOwnerId())) {
-            String botResponse = generateBotResponse(request.getContent(), property);
-
-            Message autoReply = Message.builder()
-                    .senderId(property.getOwnerId())
-                    .receiverId(senderId)
-                    .propertyId(property.getId())
-                    .content(botResponse)
-                    .timestamp(LocalDateTime.now().plusSeconds(1)) // 1 second delay
-                    .read(false)
-                    .build();
-
-            messageRepository.save(autoReply);
-        }
-
         return ResponseEntity.ok(savedMessage);
-    }
-
-    private String generateBotResponse(String userMessage, Property property) {
-        String msg = userMessage.toLowerCase();
-
-        if (msg.contains("is it available") || msg.contains("available")) {
-            return "Yes! This property is currently available for " + property.getPurpose().name() + ".";
-        }
-        if (property.getPurpose().name().equals("RENT") && (msg.contains("tenant") || msg.contains("rent"))) {
-            return "Thanks for your interest in renting! Please make sure to use the 'Apply to Rent' button to submit your application directly to the owner.";
-        }
-        if (property.getPurpose().name().equals("SALE")
-                && (msg.contains("buy") || msg.contains("price") || msg.contains("offer"))) {
-            return "This property is listed for ₹" + property.getPrice()
-                    + ". You can submit an official request using the 'Buy Property' button.";
-        }
-        if (msg.contains("hello") || msg.contains("hi")) {
-            return "Hello! I am the automated assistant for this listing. How can I help you regarding this "
-                    + property.getType().name() + "?";
-        }
-        if (msg.contains("amenities") || msg.contains("features")) {
-            if (property.getAmenities() != null && !property.getAmenities().isEmpty()) {
-                return "This property includes: " + String.join(", ", property.getAmenities()) + ".";
-            }
-            return "This property doesn't have any specific amenities listed. Is there anything else you'd like to know?";
-        }
-
-        return "Thank you for reaching out! The owner has received your message in their inbox and will reply as soon as possible. (I am an automated assistant)";
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -207,5 +161,37 @@ public class ChatController {
 
         messageRepository.delete(message);
         return ResponseEntity.ok().build();
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/typing")
+    public ResponseEntity<?> setTypingStatus(@RequestBody java.util.Map<String, Object> body, Authentication authentication) {
+        String senderId = ((UserDetailsImpl) authentication.getPrincipal()).getId();
+        String propertyId = (String) body.get("propertyId");
+        String receiverId = (String) body.get("receiverId");
+        Boolean isTyping = (Boolean) body.get("isTyping");
+
+        if (propertyId != null && receiverId != null) {
+            String key = propertyId + "_" + senderId + "_" + receiverId;
+            if (Boolean.TRUE.equals(isTyping)) {
+                activeTypingStatus.put(key, LocalDateTime.now());
+            } else {
+                activeTypingStatus.remove(key);
+            }
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/typing/{propertyId}/{otherUserId}")
+    public ResponseEntity<?> getTypingStatus(
+            @PathVariable String propertyId,
+            @PathVariable String otherUserId,
+            Authentication authentication) {
+        String currentUserId = ((UserDetailsImpl) authentication.getPrincipal()).getId();
+        String key = propertyId + "_" + otherUserId + "_" + currentUserId;
+        LocalDateTime lastTypingTime = activeTypingStatus.get(key);
+        boolean isTyping = lastTypingTime != null && lastTypingTime.isAfter(LocalDateTime.now().minusSeconds(3));
+        return ResponseEntity.ok(java.util.Map.of("isTyping", isTyping));
     }
 }

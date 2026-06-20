@@ -9,7 +9,7 @@ const GuestMaintenance = () => {
 
     const [formData, setFormData] = useState({
         propertyId: '',
-        tenantPhone: '',
+        tenantCode: '',
         title: '',
         description: '',
         type: 'GENERAL'
@@ -31,7 +31,7 @@ const GuestMaintenance = () => {
         setStatus({ type: '', message: '' });
 
         try {
-            await api.post(`/guest/maintenance?tenantPhone=${formData.tenantPhone}`, {
+            await api.post(`/guest/maintenance?tenantCode=${formData.tenantCode}`, {
                 propertyId: formData.propertyId,
                 title: formData.title,
                 description: formData.description,
@@ -47,7 +47,7 @@ const GuestMaintenance = () => {
             // Reset form
             setFormData({
                 propertyId: '',
-                tenantPhone: '',
+                tenantCode: '',
                 title: '',
                 description: '',
                 type: 'GENERAL'
@@ -56,7 +56,7 @@ const GuestMaintenance = () => {
         } catch (error) {
             setStatus({
                 type: 'error',
-                message: error.response?.data || 'Failed to submit request. Please verify your phone number and Property ID.'
+                message: error.response?.data || 'Failed to submit request. Please verify your verification code and Property ID.'
             });
         } finally {
             setIsLoading(false);
@@ -97,15 +97,15 @@ const GuestMaintenance = () => {
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Registered Phone</label>
+                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Verification Code</label>
                             <input
                                 required
                                 type="text"
-                                name="tenantPhone"
-                                value={formData.tenantPhone}
+                                name="tenantCode"
+                                value={formData.tenantCode}
                                 onChange={handleChange}
                                 className="w-full bg-[#111] border border-dark-border rounded-sm px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-brand-500 font-light transition-colors"
-                                placeholder="e.g. 555-0199"
+                                placeholder="e.g. T-A4B7D2"
                             />
                         </div>
                     </div>

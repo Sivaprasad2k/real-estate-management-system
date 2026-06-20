@@ -5,6 +5,47 @@ import api from '../api/axios';
 import MaintenanceRequestsList from '../components/MaintenanceRequestsList';
 import UserSidebar from '../components/UserSidebar';
 
+const TicketTimeline = ({ status }) => {
+    const statuses = ['OPEN', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED', 'CLOSED'];
+    const labels = ['Created', 'Assigned', 'In Progress', 'Completed', 'Closed'];
+    const currentIndex = statuses.indexOf(status);
+
+    return (
+        <div className="flex items-center w-full justify-between mt-4 border-t border-dark-border/40 pt-4 relative">
+            {labels.map((label, idx) => {
+                const isCompleted = idx <= currentIndex;
+                const isActive = idx === currentIndex;
+                return (
+                    <div key={label} className="flex flex-col items-center flex-1 relative z-10">
+                        {/* Connecting line */}
+                        {idx > 0 && (
+                            <div className={`absolute top-2.5 left-[-50%] right-[50%] h-[2px] -z-10 ${
+                                idx <= currentIndex ? 'bg-brand' : 'bg-dark-border'
+                            }`}></div>
+                        )}
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+                            isActive ? 'bg-brand border-brand ring-4 ring-brand-500/25 scale-110' :
+                            isCompleted ? 'bg-brand/20 border-brand text-brand' :
+                            'bg-[#0B0B0B] border-dark-border text-dark-muted'
+                        }`}>
+                            {isCompleted && idx < currentIndex && (
+                                <svg className="w-2.5 h-2.5 text-brand" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                            )}
+                        </div>
+                        <span className={`text-[7px] sm:text-[8px] text-center uppercase font-bold tracking-wider sm:tracking-widest mt-2 ${
+                            isActive ? 'text-brand font-extrabold' : 'text-dark-muted'
+                        }`}>
+                            {label}
+                        </span>
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
+
 const MyMaintenance = () => {
     const { user } = useAuth();
     const [rentals, setRentals] = useState([]);
@@ -124,28 +165,39 @@ const MyMaintenance = () => {
                             )}
 
                             {myMaintenance.length === 0 ? (
-                                <Card>
-                                    <p className="text-gray-400 py-4">You have no active maintenance requests.</p>
-                                </Card>
+                                /* Phase 10: Empty State */
+                                <div className="bg-dark-card border border-dark-border rounded-xl p-8 text-center flex flex-col items-center justify-center space-y-4">
+                                    <div className="p-3 bg-dark border border-dark-border text-dark-muted rounded-full">
+                                        <svg className="w-8 h-8 text-dark-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-white text-md font-semibold tracking-wide">No Active Maintenance Tickets</h3>
+                                        <p className="text-xs text-dark-muted mt-1 max-w-sm mx-auto">You have no active maintenance tickets registered in your portal.</p>
+                                    </div>
+                                </div>
                             ) : (
-                                <div className="space-y-4 mb-10">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
                                     {myMaintenance.map(ticket => (
-                                        <div key={ticket.id} className="bg-dark-card border border-dark-border rounded-lg p-5 flex flex-col hover:border-brand-500/30 transition-colors">
-                                            <div className="flex justify-between items-start mb-3">
-                                                <div>
-                                                    <h3 className="text-lg font-semibold text-white">{ticket.title}</h3>
-                                                    <p className="text-[11px] font-bold tracking-wider uppercase text-brand-400 mt-1">{ticket.propertyTitle || 'Your Property'} • {new Date(ticket.createdAt).toLocaleDateString()}</p>
-                                                </div>
-                                                <div className="flex gap-2">
-                                                    <span className="bg-[#121212] text-brand-300 border border-dark-border px-2.5 py-1 rounded text-[10px] uppercase tracking-wider font-bold">
+                                        <div key={ticket.id} className="bg-dark-card border border-dark-border rounded-xl p-5 hover:border-brand-500/25 hover:shadow-2xl transition-all duration-300 flex flex-col justify-between">
+                                            <div className="space-y-3">
+                                                <div className="flex justify-between items-start">
+                                                    <div>
+                                                        <h3 className="text-md font-semibold text-white tracking-wide">{ticket.title}</h3>
+                                                        <p className="text-[10px] text-brand uppercase font-bold tracking-widest mt-1">
+                                                            {ticket.propertyTitle || 'Your Property'} • {new Date(ticket.createdAt).toLocaleDateString()}
+                                                        </p>
+                                                    </div>
+                                                    <span className="text-[9px] bg-brand/5 border border-brand/20 text-brand px-2 py-0.5 rounded font-bold uppercase tracking-wider">
                                                         {ticket.type || 'GENERAL'}
                                                     </span>
-                                                    <span className={`px-2.5 py-1 rounded text-[10px] uppercase font-bold tracking-wider shadow-sm ${ticket.status === 'OPEN' ? 'bg-yellow-900/60 text-yellow-500' : ticket.status === 'IN_PROGRESS' ? 'bg-blue-900/60 text-blue-400' : ticket.status === 'CLOSED' || ticket.status === 'RESOLVED' ? 'bg-green-900/60 text-green-400' : 'bg-gray-800 text-gray-400'}`}>
-                                                        {ticket.status}
-                                                    </span>
                                                 </div>
+                                                <p className="text-xs text-gray-300 leading-relaxed font-light bg-[#0B0B0B] border border-dark-border/60 p-3 rounded-lg max-h-24 overflow-y-auto hidden-scroll">
+                                                    {ticket.description}
+                                                </p>
                                             </div>
-                                            <p className="text-sm text-gray-300 bg-[#121212] border border-dark-border p-3 rounded-md line-clamp-3 leading-relaxed hidden-scroll overflow-y-auto max-h-24 hover:line-clamp-none">{ticket.description}</p>
+                                            <TicketTimeline status={ticket.status} />
                                         </div>
                                     ))}
                                 </div>

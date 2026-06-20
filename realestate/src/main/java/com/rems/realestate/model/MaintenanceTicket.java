@@ -42,6 +42,9 @@ public class MaintenanceTicket {
     private MaintenanceTicketStatus status = MaintenanceTicketStatus.OPEN;
 
     @Builder.Default
+    private String priority = "MEDIUM"; // LOW, MEDIUM, HIGH, EMERGENCY
+
+    @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 
     private LocalDateTime updatedAt;
@@ -49,4 +52,29 @@ public class MaintenanceTicket {
     private LocalDateTime acceptedAt;
 
     private LocalDateTime completedAt;
+
+    private String resolutionSummary;
+
+    private java.util.List<String> beforeRepairPhotos;
+
+    private java.util.List<String> afterRepairPhotos;
+
+    @Builder.Default
+    private java.util.List<TimelineEntry> timeline = new java.util.ArrayList<>();
+
+    @Builder.Default
+    private int reopenedCount = 0;
+
+    private LocalDateTime slaDeadline;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class TimelineEntry {
+        private String status;
+        private String title;
+        private String description;
+        private LocalDateTime timestamp;
+    }
 }

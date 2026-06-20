@@ -31,7 +31,10 @@ public class RecommendationEngine {
         // Fallback simple engine: return promoted properties that are available, then
         // most recent ones.
         Query query = new Query();
-        query.addCriteria(Criteria.where("status").is(PropertyStatus.APPROVED));
+        query.addCriteria(Criteria.where("status").in(PropertyStatus.APPROVED, PropertyStatus.AVAILABLE));
+        if (userId != null && !userId.isEmpty() && !"anonymousUser".equals(userId)) {
+            query.addCriteria(Criteria.where("ownerId").ne(userId));
+        }
         query.with(Sort.by(Sort.Direction.DESC, "isPromoted").and(Sort.by(Sort.Direction.DESC, "createdAt")));
         query.limit(limit);
 

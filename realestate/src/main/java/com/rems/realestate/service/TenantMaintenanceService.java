@@ -7,6 +7,9 @@ import com.rems.realestate.repository.MaintenanceRequestRepository;
 import com.rems.realestate.repository.PropertyRepository;
 import com.rems.realestate.repository.UserRepository;
 import com.rems.realestate.repository.MessageRepository;
+import com.rems.realestate.repository.RentalAgreementRepository;
+import com.rems.realestate.model.PropertyStatus;
+import com.rems.realestate.model.RentalAgreementStatus;
 import com.rems.realestate.model.User;
 import com.rems.realestate.model.Message;
 import com.rems.realestate.model.MaintenanceType;
@@ -31,11 +34,26 @@ public class TenantMaintenanceService {
     @Autowired
     private MessageRepository messageRepository;
 
+    @Autowired
+    private RentalAgreementRepository rentalAgreementRepository;
+
+
     public MaintenanceRequest createMaintenanceRequest(TenantMaintenanceDto dto) {
         Property property = propertyRepository.findById(dto.getPropertyId())
                 .orElseThrow(() -> new RuntimeException("Property not found"));
 
+        if (property.getStatus() != PropertyStatus.RENTED) {
+            throw new RuntimeException("Maintenance requests can only be created for RENTED properties.");
+        }
+
+        boolean activeTenancyExists = rentalAgreementRepository
+                .findByPropertyIdAndStatus(property.getId(), RentalAgreementStatus.ACTIVE).isPresent();
+        if (!activeTenancyExists) {
+            throw new RuntimeException("Maintenance requests are only possible when an active tenancy exists.");
+        }
+
         MaintenanceType type = dto.getType() != null ? dto.getType() : MaintenanceType.GENERAL;
+
 
         MaintenanceRequest request = MaintenanceRequest.builder()
                 .propertyId(property.getId())

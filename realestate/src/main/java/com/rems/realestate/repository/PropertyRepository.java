@@ -14,7 +14,7 @@ import java.util.List;
 @Repository
 public interface PropertyRepository extends MongoRepository<Property, String> {
 
-        @Query("{ 'status': 'APPROVED', " +
+        @Query("{ 'status': { $in: ['APPROVED', 'SOLD', 'RENTED'] }, " +
                         "?#{[0] == null ? '{ $exists: true }' : [0]} : 'city', " +
                         "?#{[1] == null ? '{ $exists: true }' : [1]} : 'purpose', " +
                         "'price': { $gte: ?#{[2] == null ? 0 : [2]}, $lte: ?#{[3] == null ? 9999999999 : [3]} } }")

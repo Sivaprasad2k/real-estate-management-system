@@ -33,7 +33,7 @@ public class AuthService {
     private AuthenticationManager authenticationManager;
 
     public AuthResponse register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmailIgnoreCase(request.getEmail())) {
             throw new RuntimeException("Email is already in use!");
         }
 
@@ -60,7 +60,7 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
+        User user = userRepository.findByEmailIgnoreCase(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (user.isBanned()) {

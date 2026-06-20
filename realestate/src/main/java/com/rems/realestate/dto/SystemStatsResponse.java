@@ -14,4 +14,7 @@ public class SystemStatsResponse {
     private long totalProperties;
     private long activeReports;
     private long activeTickets;
+    private long activeRentals;
+    private long activeSales;
 }
+

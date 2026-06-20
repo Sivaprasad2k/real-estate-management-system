@@ -38,6 +38,9 @@ public class PropertyService {
     private RentalAgreementRepository rentalAgreementRepository;
 
     @Autowired
+    private com.rems.realestate.repository.SaleAgreementRepository saleAgreementRepository;
+
+    @Autowired
     private MongoTemplate mongoTemplate;
 
     @Autowired
@@ -136,7 +139,7 @@ public class PropertyService {
 
     public List<Property> advancedSearch(PropertySearchRequest request) {
         Query query = new Query();
-        query.addCriteria(Criteria.where("status").is(PropertyStatus.APPROVED));
+        query.addCriteria(Criteria.where("status").in(com.rems.realestate.model.PropertyStatus.APPROVED, com.rems.realestate.model.PropertyStatus.SOLD, com.rems.realestate.model.PropertyStatus.RENTED));
 
         if (request.getKeyword() != null && !request.getKeyword().isEmpty()) {
             Criteria keywordCriteria = new Criteria().orOperator(
@@ -210,104 +213,132 @@ public class PropertyService {
         propertyRepository.save(property);
     }
 
-    public void initiateSale(String propertyId, String userId, String buyerDetails, String fileUrl) {
+    public void initiateSale(String propertyId, String userId, String buyerDetails, org.springframework.web.multipart.MultipartFile file) {
         Property property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new RuntimeException("Property not found"));
 
-        if (property.getOwnerId().equals(userId)) {
-            if (buyerDetails == null || buyerDetails.isEmpty()) {
-                throw new RuntimeException("Buyer details required when owner initiates sale");
-            }
-            property.setStatus(PropertyStatus.PENDING_BUYER_CONFIRMATION);
-            property.setSaleBuyerDetails(buyerDetails);
-        } else {
-            property.setStatus(PropertyStatus.PENDING_OWNER_CONFIRMATION);
-            User buyer = userRepository.findById(userId).orElseThrow();
-            property.setSaleBuyerDetails(buyer.getName() + " (" + buyer.getEmail() + ")");
+        if (property.getStatus() != PropertyStatus.SALE_IN_PROGRESS) {
+            throw new RuntimeException("Document upload is only allowed when property status is SALE_IN_PROGRESS.");
         }
 
-        property.setSaleInitiatedBy(userId);
+        if (!property.getOwnerId().equals(userId)) {
+            throw new RuntimeException("Only the property owner can upload the sale agreement.");
+        }
+
+        property.setStatus(PropertyStatus.PENDING_BUYER_CONFIRMATION);
         property.setSaleInitiatedAt(LocalDateTime.now());
+
+        String fileUrl = "";
+        if (file != null && !file.isEmpty()) {
+            try {
+                com.rems.realestate.model.SaleAgreement agreement = com.rems.realestate.model.SaleAgreement.builder()
+                        .propertyId(property.getId())
+                        .sellerId(property.getOwnerId())
+                        .buyerId(property.getSaleInitiatedBy())
+                        .fileName(file.getOriginalFilename())
+                        .fileType(file.getContentType())
+                        .documentData(file.getBytes())
+                        .uploadedBy(userId)
+                        .uploadDate(LocalDateTime.now())
+                        .status(com.rems.realestate.model.SaleAgreementStatus.APPROVED)
+                        .build();
+
+                com.rems.realestate.model.SaleAgreement savedAgreement = saleAgreementRepository.save(agreement);
+                property.setSaleAgreementId(savedAgreement.getAgreementId());
+                fileUrl = "/api/sale-agreements/" + savedAgreement.getAgreementId() + "/document";
+            } catch (java.io.IOException e) {
+                throw new RuntimeException("Failed to save sale agreement document data", e);
+            }
+        }
+
         property.setSaleDocumentUrl(fileUrl);
         propertyRepository.save(property);
 
-        if (property.getStatus() == PropertyStatus.PENDING_BUYER_CONFIRMATION) {
-            notificationService.createNotification(
-                    property.getSaleInitiatedBy(), // We don't know the exact buyer ID easily if initiated by owner with
-                                                   // details string, but we can notify the owner that it's sent.
-                    "System Notice: Sale initiation sent for property '" + property.getTitle() + "' to buyer "
-                            + buyerDetails + ".",
-                    "SALE");
-        } else {
-            notificationService.createNotification(
-                    property.getOwnerId(),
-                    "System Notice: Buyer wants to initiate purchase for property '" + property.getTitle()
-                            + "'. Please review.",
-                    "SALE");
-        }
+        notificationService.createNotification(
+                property.getSaleInitiatedBy(),
+                "System Notice: Owner has uploaded the Sale Agreement for '" + property.getTitle() + "'. Please review and confirm to finalize.",
+                "SALE");
     }
 
     public void approveSale(String propertyId, String userId) {
         Property property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new RuntimeException("Property not found"));
 
-        if (property.getStatus() == PropertyStatus.PENDING_OWNER_CONFIRMATION) {
-            if (!property.getOwnerId().equals(userId)) {
-                throw new RuntimeException("Only owner can approve this sale");
-            }
-        } else if (property.getStatus() != PropertyStatus.PENDING_BUYER_CONFIRMATION) {
-            throw new RuntimeException("No pending sale to approve");
+        if (property.getStatus() != PropertyStatus.PENDING_BUYER_CONFIRMATION) {
+            throw new RuntimeException("No pending sale for buyer confirmation");
+        }
+
+        if (!userId.equals(property.getSaleInitiatedBy())) {
+            throw new RuntimeException("Only the buyer can confirm this sale");
         }
 
         property.setStatus(PropertyStatus.SOLD);
         property.setSaleApprovedBy(userId);
         property.setSaleApprovedAt(LocalDateTime.now());
+        property.setSoldDate(LocalDateTime.now());
+        property.setTransactionName(property.getSaleBuyerDetails());
+        property.setTransactionAmount(property.getPrice());
+
+        if (property.getSaleAgreementId() != null) {
+            saleAgreementRepository.findById(property.getSaleAgreementId()).ifPresent(agreement -> {
+                agreement.setStatus(com.rems.realestate.model.SaleAgreementStatus.APPROVED);
+                saleAgreementRepository.save(agreement);
+            });
+        }
+
         propertyRepository.save(property);
 
         notificationService.createNotification(
                 property.getOwnerId(),
-                "System Notice: Sale for property '" + property.getTitle() + "' has been APPROVED and is now SOLD.",
+                "System Notice: Sale for property '" + property.getTitle() + "' has been confirmed by the buyer and is now SOLD.",
                 "SALE");
-        if (property.getSaleInitiatedBy() != null && !property.getSaleInitiatedBy().equals(property.getOwnerId())) {
-            notificationService.createNotification(
-                    property.getSaleInitiatedBy(),
-                    "System Notice: Your purchase for property '" + property.getTitle()
-                            + "' has been APPROVED and is now SOLD.",
-                    "SALE");
-        }
+        notificationService.createNotification(
+                property.getSaleInitiatedBy(),
+                "System Notice: Your purchase for property '" + property.getTitle() + "' has been confirmed and is now SOLD.",
+                "SALE");
     }
 
     public void rejectSale(String propertyId, String userId) {
         Property property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new RuntimeException("Property not found"));
 
-        if (property.getStatus() == PropertyStatus.PENDING_OWNER_CONFIRMATION) {
-            if (!property.getOwnerId().equals(userId)) {
-                throw new RuntimeException("Only owner can reject this sale");
-            }
+        if (property.getStatus() != PropertyStatus.SALE_IN_PROGRESS && property.getStatus() != PropertyStatus.PENDING_BUYER_CONFIRMATION) {
+            throw new RuntimeException("No active sale transaction to reject/cancel");
         }
 
-        property.setStatus(PropertyStatus.AVAILABLE);
+        if (!property.getOwnerId().equals(userId) && !userId.equals(property.getSaleInitiatedBy())) {
+            throw new RuntimeException("Not authorized to reject/cancel this sale");
+        }
+
+        property.setStatus(PropertyStatus.APPROVED);
+
+        if (property.getSaleAgreementId() != null) {
+            saleAgreementRepository.findById(property.getSaleAgreementId()).ifPresent(agreement -> {
+                agreement.setStatus(com.rems.realestate.model.SaleAgreementStatus.REJECTED);
+                saleAgreementRepository.save(agreement);
+            });
+        }
+
+        String oldBuyerId = property.getSaleInitiatedBy();
         property.setSaleInitiatedBy(null);
         property.setSaleInitiatedAt(null);
         property.setSaleDocumentUrl(null);
         property.setSaleBuyerDetails(null);
+        property.setSaleAgreementId(null);
         propertyRepository.save(property);
 
         notificationService.createNotification(
                 property.getOwnerId(),
-                "System Notice: Sale for property '" + property.getTitle() + "' has been REJECTED/CANCELLED.",
+                "System Notice: Sale transaction for property '" + property.getTitle() + "' has been cancelled.",
                 "SALE");
-        // If buyer initiated, notify them
-        if (userId.equals(property.getOwnerId()) && property.getSaleInitiatedBy() != null
-                && !property.getSaleInitiatedBy().equals(userId)) {
+        if (oldBuyerId != null) {
             notificationService.createNotification(
-                    property.getSaleInitiatedBy(),
-                    "System Notice: Your purchase request for property '" + property.getTitle()
-                            + "' was REJECTED by the owner.",
+                    oldBuyerId,
+                    "System Notice: Purchase transaction for property '" + property.getTitle() + "' was cancelled.",
                     "SALE");
         }
     }
+
 
     public void markRented(String propertyId, String ownerId, com.rems.realestate.dto.MarkRentedRequest request) {
         Property property = propertyRepository.findById(propertyId)
@@ -350,7 +381,9 @@ public class PropertyService {
     public List<Property> getNearbyProperties(double longitude, double latitude, double distanceKm) {
         Point point = new Point(longitude, latitude);
         Distance distance = new Distance(distanceKm, Metrics.KILOMETERS);
-        return propertyRepository.findByLocationNear(point, distance);
+        return propertyRepository.findByLocationNear(point, distance).stream()
+                .filter(p -> p.getStatus() == PropertyStatus.APPROVED || p.getStatus() == PropertyStatus.SOLD || p.getStatus() == PropertyStatus.RENTED)
+                .toList();
     }
 
     public List<Property> getFlaggedProperties() {

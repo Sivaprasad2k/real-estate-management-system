@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/realestate.iml" filepath="$PROJECT_DIR$/.idea/realestate.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/real-estate-management-system.iml" filepath="$PROJECT_DIR$/.idea/real-estate-management-system.iml" />
+      <module fileurl="file://$PROJECT_DIR$/realestate/realestate.iml" filepath="$PROJECT_DIR$/realestate/realestate.iml" />
     </modules>
   </component>
 </project>

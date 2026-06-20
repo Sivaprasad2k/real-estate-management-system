@@ -11,7 +11,11 @@ import java.util.Optional;
 public interface UserRepository extends MongoRepository<User, String> {
     Optional<User> findByEmail(String email);
 
+    Optional<User> findByEmailIgnoreCase(String email);
+
     Boolean existsByEmail(String email);
+
+    Boolean existsByEmailIgnoreCase(String email);
 
     List<User> findByRolesContainingAndSkillsContaining(String role, com.rems.realestate.model.MaintenanceType skill);
 }

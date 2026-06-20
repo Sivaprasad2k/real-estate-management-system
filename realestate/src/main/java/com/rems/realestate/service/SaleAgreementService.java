@@ -32,6 +32,10 @@ public class SaleAgreementService {
         Property property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new RuntimeException("Property not found"));
 
+        if (property.getStatus() != PropertyStatus.SALE_IN_PROGRESS && property.getStatus() != PropertyStatus.SOLD) {
+            throw new RuntimeException("Sale agreement upload is only allowed when property status is SALE_IN_PROGRESS or SOLD");
+        }
+
         // Fraud Prevention: Check if property is already sold or has a pending
         // agreement
         // For simplicity, we assume an active agreement means it's not REJECTED.

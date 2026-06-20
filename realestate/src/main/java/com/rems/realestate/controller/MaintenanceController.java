@@ -2,6 +2,8 @@ package com.rems.realestate.controller;
 
 import com.rems.realestate.dto.MaintenanceTicketRequest;
 import com.rems.realestate.dto.MaintenanceTicketResponse;
+import com.rems.realestate.dto.MaintenanceCompleteRequest;
+import com.rems.realestate.dto.StaffMetricsResponse;
 import com.rems.realestate.model.MaintenanceTicket;
 import com.rems.realestate.model.MaintenanceTicketStatus;
 import com.rems.realestate.security.UserDetailsImpl;
@@ -126,5 +128,27 @@ public class MaintenanceController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    @PreAuthorize("hasRole('MAINTENANCE')")
+    @PutMapping("/{ticketId}/complete")
+    public ResponseEntity<?> completeTicket(@PathVariable String ticketId,
+            @RequestBody MaintenanceCompleteRequest request,
+            Authentication authentication) {
+        try {
+            String staffId = ((UserDetailsImpl) authentication.getPrincipal()).getId();
+            MaintenanceTicket ticket = maintenanceService.completeTicket(ticketId, staffId,
+                    request.getResolutionSummary(), request.getBeforeRepairPhotos(), request.getAfterRepairPhotos());
+            return ResponseEntity.ok(ticket);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PreAuthorize("hasRole('MAINTENANCE')")
+    @GetMapping("/staff/metrics")
+    public ResponseEntity<StaffMetricsResponse> getStaffMetrics(Authentication authentication) {
+        String staffId = ((UserDetailsImpl) authentication.getPrincipal()).getId();
+        return ResponseEntity.ok(maintenanceService.getStaffMetrics(staffId));
     }
 }

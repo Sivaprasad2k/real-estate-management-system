@@ -86,10 +86,16 @@ public class Property {
     private Double latitude;
     private Double longitude;
 
-    // Additional Spec fields
     private Integer bedrooms;
     private Integer bathrooms;
     private Double squareFootage;
+
+    // Newly added spec fields
+    private Integer propertyAge;
+    private Integer parkingCount;
+    private String furnishingStatus;
+    private String ownershipType;
+    private LocalDateTime availabilityDate;
 
     private String transactionName;
     private String transactionContact;

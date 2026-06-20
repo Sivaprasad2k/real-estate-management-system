@@ -30,6 +30,10 @@ public class Tenancy {
     private String tenantPhone;
     private Double rentAmount;
     private LocalDateTime startDate;
+    private String tenantCode;
+    private String endedBy;
+    private String terminationReason;
+    private LocalDateTime endDate;
 
     @Builder.Default
     private String status = "ACTIVE";

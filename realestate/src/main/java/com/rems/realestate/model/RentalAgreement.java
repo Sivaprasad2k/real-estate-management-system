@@ -50,6 +50,14 @@ public class RentalAgreement {
     @Builder.Default
     private RentalAgreementStatus status = RentalAgreementStatus.ACTIVE;
 
+    private String fileName;
+
+    private String fileType;
+
+    private byte[] documentData;
+
+    private String documentUrl;
+
     @Builder.Default
     private LocalDateTime generatedAt = LocalDateTime.now();
 

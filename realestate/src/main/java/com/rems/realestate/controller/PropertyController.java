@@ -127,8 +127,7 @@ public class PropertyController {
             Authentication authentication) {
         try {
             String userId = ((UserDetailsImpl) authentication.getPrincipal()).getId();
-            String fileUrl = file != null ? "/uploads/" + file.getOriginalFilename() : "";
-            propertyService.initiateSale(id, userId, buyerDetails, fileUrl);
+            propertyService.initiateSale(id, userId, buyerDetails, file);
             return ResponseEntity.ok("Sale initiated successfully");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
