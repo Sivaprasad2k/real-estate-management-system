@@ -86,6 +86,15 @@ public class JwtService {
     }
 
     private Key getSignInKey() {
-        return Keys.hmacShaKeyFor(secretKey.getBytes());
+        byte[] keyBytes = secretKey.getBytes();
+        if (keyBytes.length < 32) {
+            try {
+                java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+                keyBytes = digest.digest(keyBytes);
+            } catch (java.security.NoSuchAlgorithmException e) {
+                throw new RuntimeException("SHA-256 algorithm not available for JWT key generation", e);
+            }
+        }
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 }

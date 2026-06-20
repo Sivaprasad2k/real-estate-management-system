@@ -21,21 +21,31 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        if (userRepository.findByEmail("admin99@test.com").isEmpty()) {
+        String adminEmail = System.getenv("ADMIN_EMAIL");
+        String adminPassword = System.getenv("ADMIN_PASSWORD");
+
+        if (adminEmail == null || adminEmail.trim().isEmpty()) {
+            adminEmail = "admin99@test.com";
+        }
+        if (adminPassword == null || adminPassword.trim().isEmpty()) {
+            adminPassword = "password";
+        }
+
+        if (userRepository.findByEmail(adminEmail).isEmpty()) {
             Set<String> roles = new HashSet<>();
             roles.add("ROLE_USER");
             roles.add("ROLE_ADMIN");
 
             User admin = User.builder()
                     .name("Super Admin")
-                    .email("admin99@test.com")
-                    .password(passwordEncoder.encode("password"))
+                    .email(adminEmail)
+                    .password(passwordEncoder.encode(adminPassword))
                     .roles(roles)
                     .isVerified(true)
                     .build();
 
             userRepository.save(admin);
-            System.out.println("Seeded Admin user: admin99@test.com / password");
+            System.out.println("Seeded Admin user: " + adminEmail);
         }
     }
 }
