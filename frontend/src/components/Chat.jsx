@@ -276,12 +276,12 @@ const Chat = ({ propertyId, otherUserId, otherUserName, onBack }) => {
     return (
         <div className="flex flex-col h-full bg-[#0b0b0b]/60 backdrop-blur-md rounded-2xl shadow-2xl border border-dark-border overflow-hidden relative">
             {/* Header bar */}
-            <div className="bg-dark-card border-b border-dark-border p-4 flex items-center justify-between z-20 relative">
-                <div className="flex items-center gap-3">
+            <div className="bg-dark-card border-b border-dark-border p-3 md:p-4 flex items-center justify-between z-20 relative">
+                <div className="flex items-center gap-2 md:gap-3">
                     {onBack && (
                         <button
                             onClick={onBack}
-                            className="lg:hidden text-brand hover:text-brand-300 mr-2 p-1 cursor-pointer transition-colors"
+                            className="lg:hidden text-brand hover:text-brand-300 mr-1 md:mr-2 p-1 cursor-pointer transition-colors"
                             aria-label="Back to conversations"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -289,12 +289,12 @@ const Chat = ({ propertyId, otherUserId, otherUserName, onBack }) => {
                             </svg>
                         </button>
                     )}
-                    <div className="w-10 h-10 rounded-full bg-brand/10 border border-brand/20 text-brand flex items-center justify-center font-serif text-lg font-bold">
+                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-brand/10 border border-brand/20 text-brand flex items-center justify-center font-serif text-base md:text-lg font-bold">
                         {displayName.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                        <h3 className="text-white font-semibold text-sm tracking-wide">{displayName}</h3>
-                        <span className="text-[10px] text-success font-bold tracking-widest uppercase flex items-center gap-1.5 mt-0.5">
+                        <h3 className="text-white font-semibold text-xs md:text-sm tracking-wide">{displayName}</h3>
+                        <span className="text-[9px] md:text-[10px] text-success font-bold tracking-widest uppercase flex items-center gap-1 md:gap-1.5 mt-0.5">
                             <span className="w-1.5 h-1.5 bg-success rounded-full animate-pulse"></span>
                             Direct Contact
                         </span>
@@ -304,17 +304,17 @@ const Chat = ({ propertyId, otherUserId, otherUserName, onBack }) => {
 
             {/* Property details header and action triggers */}
             {property && (
-                <div className="bg-[#12141a] border-b border-dark-border px-4 py-2.5 flex items-center justify-between text-xs z-15 relative">
-                    <div className="flex items-center gap-2">
-                        <span className="text-white font-semibold font-serif truncate max-w-[150px]">{property.title}</span>
-                        <span className="text-brand font-bold">₹{property.price?.toLocaleString()}</span>
+                <div className="bg-[#12141a] border-b border-dark-border px-3 py-2 md:px-4 md:py-2.5 flex items-center justify-between text-xs z-15 relative">
+                    <div className="flex items-center gap-1.5 md:gap-2 min-w-0 flex-1 mr-2">
+                        <span className="text-white font-semibold font-serif truncate max-w-[100px] sm:max-w-[150px] text-[11px] md:text-xs">{property.title}</span>
+                        <span className="text-brand font-bold shrink-0 text-[11px] md:text-xs">₹{property.price?.toLocaleString()}</span>
                     </div>
                     {user && user.id !== property.ownerId && property.status !== 'SOLD' && property.status !== 'RENTED' && (
-                        <div className="flex gap-1.5">
-                            <button onClick={() => setShowVisitModal(true)} className="px-2.5 py-1.5 bg-dark border border-dark-border hover:border-brand/40 text-white rounded text-[10px] uppercase font-bold tracking-wider transition-all cursor-pointer">Visit</button>
-                            <button onClick={() => setShowOfferModal(true)} className="px-2.5 py-1.5 bg-dark border border-dark-border hover:border-brand/40 text-white rounded text-[10px] uppercase font-bold tracking-wider transition-all cursor-pointer">Offer</button>
-                            <button onClick={handleSubmitTransactionRequest} className="px-2.5 py-1.5 bg-brand text-dark-DEFAULT rounded text-[10px] uppercase font-bold tracking-wider transition-all hover:bg-brand-400 cursor-pointer">
-                                {property.purpose === 'BUY' ? 'Buy Request' : 'Rent Apply'}
+                        <div className="flex gap-1 md:gap-1.5 shrink-0">
+                            <button onClick={() => setShowVisitModal(true)} className="px-2 py-1 md:px-2.5 md:py-1.5 bg-dark border border-dark-border hover:border-brand/40 text-white rounded text-[9px] md:text-[10px] uppercase font-bold tracking-wider transition-all cursor-pointer">Visit</button>
+                            <button onClick={() => setShowOfferModal(true)} className="px-2 py-1 md:px-2.5 md:py-1.5 bg-dark border border-dark-border hover:border-brand/40 text-white rounded text-[9px] md:text-[10px] uppercase font-bold tracking-wider transition-all cursor-pointer">Offer</button>
+                            <button onClick={handleSubmitTransactionRequest} className="px-2 py-1 md:px-2.5 md:py-1.5 bg-brand text-dark-DEFAULT rounded text-[9px] md:text-[10px] uppercase font-bold tracking-wider transition-all hover:bg-brand-400 cursor-pointer">
+                                {property.purpose === 'BUY' ? 'Buy' : 'Apply'}
                             </button>
                         </div>
                     )}
@@ -322,7 +322,7 @@ const Chat = ({ propertyId, otherUserId, otherUserName, onBack }) => {
             )}
 
             {/* Conversation Messages */}
-            <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-[#0B0B0B]/20 relative scrollbar-thin">
+            <div className="flex-1 overflow-y-auto p-3 md:p-5 space-y-3 md:space-y-4 bg-[#0B0B0B]/20 relative scrollbar-thin">
                 {isLoading ? (
                     <div className="flex justify-center items-center h-full">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
@@ -340,12 +340,12 @@ const Chat = ({ propertyId, otherUserId, otherUserName, onBack }) => {
                         </div>
                     </div>
                 ) : (
-                    <div className="flex flex-col space-y-3">
+                    <div className="flex flex-col space-y-2 md:space-y-3">
                         {messages.map((msg, idx) => {
                             const isMine = msg.senderId === user.id;
                             return (
                                 <div key={msg.id || idx} className={`flex ${isMine ? 'justify-end' : 'justify-start'} w-full animate-fade-in`}>
-                                    <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 shadow-md flex flex-col border transition-all relative group ${
+                                    <div className={`max-w-[85%] md:max-w-[75%] rounded-2xl px-3 py-2 md:px-4 md:py-2.5 shadow-md flex flex-col border transition-all relative group ${
                                         isMine
                                             ? 'bg-brand/10 border-brand/30 text-white rounded-tr-none'
                                             : 'bg-dark-card border-dark-border text-gray-300 rounded-tl-none'
@@ -380,11 +380,11 @@ const Chat = ({ propertyId, otherUserId, otherUserName, onBack }) => {
                         })}
                     </div>
                 )}
-
+ 
                 {/* Animated Typing Indicator */}
                 {isTyping && (
                     <div className="flex justify-start w-full animate-pulse">
-                        <div className="flex items-center gap-1.5 bg-dark-card border border-dark-border rounded-2xl px-4 py-3 max-w-[200px] shadow-sm rounded-tl-none">
+                        <div className="flex items-center gap-1.5 bg-dark-card border border-dark-border rounded-2xl px-3 py-2 md:px-4 md:py-3 max-w-[200px] shadow-sm rounded-tl-none">
                             <span className="w-1.5 h-1.5 bg-brand rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
                             <span className="w-1.5 h-1.5 bg-brand rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
                             <span className="w-1.5 h-1.5 bg-brand rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
@@ -394,9 +394,9 @@ const Chat = ({ propertyId, otherUserId, otherUserName, onBack }) => {
                 )}
                 <div ref={messagesEndRef} />
             </div>
-
+ 
             {/* Message Input controls */}
-            <form onSubmit={handleSendMessage} className="p-4 bg-dark-card border-t border-dark-border flex items-center gap-3 z-20 relative">
+            <form onSubmit={handleSendMessage} className="p-2.5 md:p-4 bg-dark-card border-t border-dark-border flex items-center gap-2 md:gap-3 z-20 relative">
                 <input
                     type="text"
                     value={newMessage}
@@ -405,7 +405,7 @@ const Chat = ({ propertyId, otherUserId, otherUserName, onBack }) => {
                         handleUserTyping();
                     }}
                     placeholder="Type a message to initiate visit or negotiation..."
-                    className="flex-1 bg-[#0B0B0B] border border-dark-border rounded-xl px-4 py-3 text-white focus:border-brand outline-none text-xs transition-colors placeholder-dark-muted font-light"
+                    className="flex-1 bg-[#0B0B0B] border border-dark-border rounded-xl px-3.5 py-2.5 md:px-4 md:py-3 text-white focus:border-brand outline-none text-xs transition-colors placeholder-dark-muted font-light"
                 />
                 <button
                     type="submit"

@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import CustomSelect from '../components/CustomSelect';
 
 const Home = () => {
     const navigate = useNavigate();
+    const [maxPrice, setMaxPrice] = useState('');
+    const [propertyType, setPropertyType] = useState('');
 
     return (
         <div className="w-full bg-dark min-h-screen">
@@ -55,21 +58,31 @@ const Home = () => {
                             </div>
                             <div className="w-full">
                                 <label className="block text-[9px] uppercase tracking-widest text-gray-500 font-bold mb-2">Max Price</label>
-                                <select className="w-full bg-transparent text-white border-b border-gray-600/50 pb-2 focus:outline-none focus:border-brand-400 text-[13px] font-light uppercase tracking-wider cursor-pointer">
-                                    <option value="" className="bg-dark text-white">Any Price</option>
-                                    <option value="500k" className="bg-dark text-white">₹50,00,000</option>
-                                    <option value="1m" className="bg-dark text-white">₹1,00,00,000</option>
-                                    <option value="5m" className="bg-dark text-white">₹5,00,00,000</option>
-                                    <option value="10m" className="bg-dark text-white">₹10,00,00,000+</option>
-                                </select>
+                                <CustomSelect
+                                    value={maxPrice}
+                                    onChange={e => setMaxPrice(e.target.value)}
+                                    placeholder="Any Price"
+                                    options={[
+                                        { value: '', label: 'Any Price' },
+                                        { value: '500k', label: '₹50,00,000' },
+                                        { value: '1m', label: '₹1,00,00,000' },
+                                        { value: '5m', label: '₹5,00,00,000' },
+                                        { value: '10m', label: '₹10,00,00,000+' }
+                                    ]}
+                                />
                             </div>
                             <div className="w-full">
                                 <label className="block text-[9px] uppercase tracking-widest text-gray-500 font-bold mb-2">Property Type</label>
-                                <select className="w-full bg-transparent text-white border-b border-gray-600/50 pb-2 focus:outline-none focus:border-brand-400 text-[13px] font-light uppercase tracking-wider cursor-pointer">
-                                    <option value="" className="bg-dark text-white">All Types</option>
-                                    <option value="sale" className="bg-dark text-white">For Sale</option>
-                                    <option value="rent" className="bg-dark text-white">For Rent</option>
-                                </select>
+                                <CustomSelect
+                                    value={propertyType}
+                                    onChange={e => setPropertyType(e.target.value)}
+                                    placeholder="All Types"
+                                    options={[
+                                        { value: '', label: 'All Types' },
+                                        { value: 'sale', label: 'For Sale' },
+                                        { value: 'rent', label: 'For Rent' }
+                                    ]}
+                                />
                             </div>
                             <button
                                 onClick={() => navigate('/login')}

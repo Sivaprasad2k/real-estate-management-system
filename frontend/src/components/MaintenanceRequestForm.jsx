@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import api from '../api/axios';
+import CustomSelect from './CustomSelect';
 
 const MaintenanceRequestForm = ({ propertyId, tenantName, onSuccess }) => {
     const [formData, setFormData] = useState({
@@ -60,19 +61,20 @@ const MaintenanceRequestForm = ({ propertyId, tenantName, onSuccess }) => {
                     <label className="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wider">
                         Maintenance Type
                     </label>
-                    <select
+                    <CustomSelect
+                        id="type"
                         required
                         value={formData.type}
                         onChange={e => setFormData({ ...formData, type: e.target.value })}
-                        className="w-full bg-dark border border-dark-border rounded-md px-3 py-2.5 text-white focus:outline-none focus:border-brand-500 transition-colors"
-                    >
-                        <option value="GENERAL">General Maintenance</option>
-                        <option value="PLUMBING">Plumbing</option>
-                        <option value="ELECTRICAL">Electrical</option>
-                        <option value="HVAC">HVAC / AC</option>
-                        <option value="APPLIANCE">Appliance Repair</option>
-                        <option value="CARPENTRY">Carpentry</option>
-                    </select>
+                        options={[
+                            { value: 'GENERAL', label: 'General Maintenance' },
+                            { value: 'PLUMBING', label: 'Plumbing' },
+                            { value: 'ELECTRICAL', label: 'Electrical' },
+                            { value: 'HVAC', label: 'HVAC / AC' },
+                            { value: 'APPLIANCE', label: 'Appliance Repair' },
+                            { value: 'CARPENTRY', label: 'Carpentry' }
+                        ]}
+                    />
                 </div>
                 <div>
                     <label className="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wider">

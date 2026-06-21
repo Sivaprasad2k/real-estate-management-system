@@ -131,7 +131,7 @@ const MyTransactions = () => {
                 </div>
 
                 {/* Tab Navigation */}
-                <div className="flex border-b border-dark-border/60 overflow-x-auto whitespace-nowrap hidden-scroll">
+                <div className="flex border-b border-dark-border/60 overflow-x-auto whitespace-nowrap hidden-scroll w-full max-w-full">
                     {[
                         { id: 'purchases', label: 'Pending Purchases', count: getPendingPurchases().length },
                         { id: 'rentals', label: 'Pending Rentals', count: getPendingRentals().length },

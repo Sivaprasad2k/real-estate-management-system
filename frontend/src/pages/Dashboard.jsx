@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import Card from '../components/Card';
 import api from '../api/axios';
 import UserSidebar from '../components/UserSidebar';
+import CustomSelect from '../components/CustomSelect';
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -251,30 +252,32 @@ const Dashboard = () => {
                                 </div>
                                 <div className="flex flex-col">
                                     <label className="text-[9px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Property Type</label>
-                                    <select
+                                    <CustomSelect
                                         value={filters.type}
                                         onChange={(e) => setFilters({ ...filters, type: e.target.value })}
-                                        className="w-full bg-[#0B0B0B] border border-dark-border rounded-lg px-3 py-2.5 text-white focus:border-brand/60 outline-none text-xs transition-colors cursor-pointer"
-                                    >
-                                        <option value="">All Types</option>
-                                        <option value="APARTMENT">Apartment</option>
-                                        <option value="HOUSE">House</option>
-                                        <option value="VILLA">Villa</option>
-                                        <option value="COMMERCIAL">Commercial</option>
-                                        <option value="LAND">Land</option>
-                                    </select>
+                                        placeholder="All Types"
+                                        options={[
+                                            { value: '', label: 'All Types' },
+                                            { value: 'APARTMENT', label: 'Apartment' },
+                                            { value: 'HOUSE', label: 'House' },
+                                            { value: 'VILLA', label: 'Villa' },
+                                            { value: 'COMMERCIAL', label: 'Commercial' },
+                                            { value: 'LAND', label: 'Land' }
+                                        ]}
+                                    />
                                 </div>
                                 <div className="flex flex-col">
                                     <label className="text-[9px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Purpose</label>
-                                    <select
+                                    <CustomSelect
                                         value={filters.purpose}
                                         onChange={(e) => setFilters({ ...filters, purpose: e.target.value })}
-                                        className="w-full bg-[#0B0B0B] border border-dark-border rounded-lg px-3 py-2.5 text-white focus:border-brand/60 outline-none text-xs transition-colors cursor-pointer"
-                                    >
-                                        <option value="">Any Purpose</option>
-                                        <option value="BUY">For Sale</option>
-                                        <option value="RENT">For Rent</option>
-                                    </select>
+                                        placeholder="Any Purpose"
+                                        options={[
+                                            { value: '', label: 'Any Purpose' },
+                                            { value: 'BUY', label: 'For Sale' },
+                                            { value: 'RENT', label: 'For Rent' }
+                                        ]}
+                                    />
                                 </div>
                                 <div className="flex flex-col">
                                     <label className="text-[9px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Min Price (₹)</label>
@@ -298,17 +301,18 @@ const Dashboard = () => {
                                 </div>
                                 <div className="flex flex-col">
                                     <label className="text-[9px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Beds</label>
-                                    <select
+                                    <CustomSelect
                                         value={filters.bedrooms}
                                         onChange={(e) => setFilters({ ...filters, bedrooms: e.target.value })}
-                                        className="w-full bg-[#0B0B0B] border border-dark-border rounded-lg px-3 py-2.5 text-white focus:border-brand/60 outline-none text-xs transition-colors cursor-pointer"
-                                    >
-                                        <option value="">Any</option>
-                                        <option value="1">1+ Beds</option>
-                                        <option value="2">2+ Beds</option>
-                                        <option value="3">3+ Beds</option>
-                                        <option value="4">4+ Beds</option>
-                                    </select>
+                                        placeholder="Any"
+                                        options={[
+                                            { value: '', label: 'Any' },
+                                            { value: '1', label: '1+ Beds' },
+                                            { value: '2', label: '2+ Beds' },
+                                            { value: '3', label: '3+ Beds' },
+                                            { value: '4', label: '4+ Beds' }
+                                        ]}
+                                    />
                                 </div>
                             </div>
                             <div className="flex justify-end pt-2">

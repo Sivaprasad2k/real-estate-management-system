@@ -4,6 +4,7 @@ import Card from '../components/Card';
 import api from '../api/axios';
 import MaintenanceRequestsList from '../components/MaintenanceRequestsList';
 import UserSidebar from '../components/UserSidebar';
+import CustomSelect from '../components/CustomSelect';
 
 const TicketTimeline = ({ status }) => {
     const statuses = ['OPEN', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED', 'CLOSED'];
@@ -123,29 +124,34 @@ const MyMaintenance = () => {
                             </div>
 
                             {showMaintenanceForm && (
-                                <div className="bg-[#121212] border border-brand-500/20 p-6 rounded-xl mb-8 shadow-lg relative overflow-hidden">
-                                    <div className="absolute top-0 left-0 w-1 h-full bg-brand-500"></div>
+                                <div className="bg-[#121212] border border-brand-500/20 p-6 rounded-xl mb-8 shadow-lg relative">
+                                    <div className="absolute top-0 left-0 w-1 h-full bg-brand-500 rounded-l-xl"></div>
                                     <h3 className="text-lg font-medium text-white mb-6">Submit New Request</h3>
                                     <form onSubmit={handleCreateMaintenance} className="space-y-5">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                             <div>
-                                                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Property</label>
-                                                <select required value={maintenanceForm.propertyId} onChange={e => setMaintenanceForm({ ...maintenanceForm, propertyId: e.target.value })} className="w-full bg-dark-card border border-dark-border rounded-lg px-4 py-2.5 text-white focus:ring-1 focus:ring-brand-500 outline-none">
-                                                    <option value="">Select Property</option>
-                                                    {rentals.map(r => (
-                                                        <option key={r.propertyId} value={r.propertyId}>{r.propertyTitle || 'Property ' + r.propertyId}</option>
-                                                    ))}
-                                                </select>
+                                                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Property *</label>
+                                                <CustomSelect
+                                                    required
+                                                    value={maintenanceForm.propertyId}
+                                                    onChange={e => setMaintenanceForm({ ...maintenanceForm, propertyId: e.target.value })}
+                                                    placeholder="Select Property"
+                                                    options={rentals.map(r => ({ value: r.propertyId, label: r.propertyTitle || 'Property ' + r.propertyId }))}
+                                                />
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Maintenance Type</label>
-                                                <select value={maintenanceForm.type} onChange={e => setMaintenanceForm({ ...maintenanceForm, type: e.target.value })} className="w-full bg-dark-card border border-dark-border rounded-lg px-4 py-2.5 text-white focus:ring-1 focus:ring-brand-500 outline-none">
-                                                    <option value="GENERAL">General Maintenance</option>
-                                                    <option value="PLUMBING">Plumbing</option>
-                                                    <option value="ELECTRICAL">Electrical</option>
-                                                    <option value="HVAC">HVAC / AC</option>
-                                                    <option value="APPLIANCE">Appliance Repair</option>
-                                                </select>
+                                                <CustomSelect
+                                                    value={maintenanceForm.type}
+                                                    onChange={e => setMaintenanceForm({ ...maintenanceForm, type: e.target.value })}
+                                                    options={[
+                                                        { value: 'GENERAL', label: 'General Maintenance' },
+                                                        { value: 'PLUMBING', label: 'Plumbing' },
+                                                        { value: 'ELECTRICAL', label: 'Electrical' },
+                                                        { value: 'HVAC', label: 'HVAC / AC' },
+                                                        { value: 'APPLIANCE', label: 'Appliance Repair' }
+                                                    ]}
+                                                />
                                             </div>
                                         </div>
                                         <div>

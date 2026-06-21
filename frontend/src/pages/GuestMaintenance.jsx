@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import CustomSelect from '../components/CustomSelect';
 
 const MAINTENANCE_SKILLS = ['PLUMBING', 'ELECTRICAL', 'CARPENTRY', 'HVAC', 'GENERAL', 'APPLIANCE'];
 
@@ -65,7 +66,7 @@ const GuestMaintenance = () => {
 
     return (
         <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center p-4">
-            <div className="bg-dark/40 backdrop-blur-md rounded-xl border border-dark-border p-8 w-full max-w-2xl shadow-2xl animate-fade-in relative overflow-hidden">
+            <div className="bg-dark/40 backdrop-blur-md rounded-xl border border-dark-border p-8 w-full max-w-2xl shadow-2xl animate-fade-in relative">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-brand-400/5 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
 
                 <div className="text-center mb-10">
@@ -112,17 +113,13 @@ const GuestMaintenance = () => {
 
                     <div>
                         <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Issue Type</label>
-                        <select
+                        <CustomSelect
                             required
                             name="type"
                             value={formData.type}
                             onChange={handleChange}
-                            className="w-full bg-[#111] border border-dark-border rounded-sm px-4 py-3 text-white focus:outline-none focus:border-brand-500 font-light transition-colors"
-                        >
-                            {MAINTENANCE_SKILLS.map(skill => (
-                                <option key={skill} value={skill}>{skill}</option>
-                            ))}
-                        </select>
+                            options={MAINTENANCE_SKILLS.map(skill => ({ value: skill, label: skill }))}
+                        />
                     </div>
 
                     <div>

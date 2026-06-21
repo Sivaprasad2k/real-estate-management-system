@@ -304,7 +304,7 @@ const MaintenanceDashboard = () => {
             </div>
 
             {/* TAB SELECTORS */}
-            <div className="flex border-b border-dark-border/80 gap-2 relative overflow-x-auto whitespace-nowrap hidden-scroll">
+            <div className="flex border-b border-dark-border/80 gap-2 relative overflow-x-auto whitespace-nowrap hidden-scroll w-full max-w-full">
                 <button
                     onClick={() => setActiveSection('active')}
                     className={`relative px-6 py-4 text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2 shrink-0 ${

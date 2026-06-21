@@ -106,21 +106,26 @@ const UserSidebar = () => {
             </aside>
 
             {/* Mobile Bottom Navigation Bar (hidden on desktop) */}
-            <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#0B0B0B]/90 backdrop-blur-lg border-t border-dark-border z-40 flex justify-around items-center py-2.5 px-3">
+            <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#111111]/95 backdrop-blur-xl border-t border-white/[0.08] shadow-[0_-8px_30px_rgba(0,0,0,0.8)] z-40 flex justify-around items-center py-2 px-3">
                 {menuItems.map((item) => {
                     const isActive = location.pathname === item.path;
                     return (
                         <Link
                             key={item.path}
                             to={item.path}
-                            className={`flex flex-col items-center gap-1.5 transition-all text-center ${
+                            className={`flex flex-col items-center gap-1 transition-all text-center relative py-1 px-2 ${
                                 isActive ? 'text-brand' : 'text-gray-400 hover:text-white'
                             }`}
                         >
-                            <span className={isActive ? 'text-brand scale-110' : 'text-gray-500'}>
+                            {isActive && (
+                                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-[2px] bg-brand shadow-[0_0_8px_rgba(212,175,55,0.8)] rounded-full"></span>
+                            )}
+                            <span className={isActive ? 'text-brand scale-110 transition-transform duration-300 drop-shadow-[0_0_4px_rgba(212,175,55,0.4)]' : 'text-gray-500 transition-colors'}>
                                 {item.icon}
                             </span>
-                            <span className="text-[9px] uppercase tracking-wider font-semibold truncate max-w-[65px] font-sans">
+                            <span className={`text-[9.5px] uppercase tracking-wider font-semibold truncate max-w-[65px] font-sans ${
+                                isActive ? 'text-brand font-bold' : 'text-gray-400'
+                            }`}>
                                 {item.label.split(' ')[0]}
                             </span>
                         </Link>

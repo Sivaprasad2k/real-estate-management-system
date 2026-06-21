@@ -184,8 +184,8 @@ const AdminDashboard = () => {
     return (
         <div className="flex flex-col lg:flex-row gap-8 min-h-[calc(100vh-8rem)]">
             {/* Sidebar Controls */}
-            <aside className="w-full lg:w-[260px] shrink-0">
-                <div className="bg-dark-card rounded-xl p-5 border border-dark-border flex flex-row overflow-x-auto whitespace-nowrap lg:flex-col gap-2 hidden-scroll">
+            <aside className="w-full lg:w-[260px] shrink-0 min-w-0 overflow-hidden">
+                <div className="bg-dark-card rounded-xl p-4 sm:p-5 border border-dark-border flex flex-row overflow-x-auto whitespace-nowrap lg:flex-col gap-2 hidden-scroll w-full max-w-full">
                     <div className="text-gray-400 text-xs font-bold uppercase tracking-widest px-4 mb-2 hidden lg:block">Controls</div>
                     <button
                         onClick={() => setActiveTab('overview')}

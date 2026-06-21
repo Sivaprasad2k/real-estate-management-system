@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
 import api from '../api/axios';
 import UserSidebar from '../components/UserSidebar';
+import CustomSelect from '../components/CustomSelect';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -362,8 +363,8 @@ const AddProperty = () => {
                     </div>
                 </div>
 
-                <Card className="border border-dark-border relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand via-brand-400 to-brand"></div>
+                <Card className="border border-dark-border relative">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand via-brand-400 to-brand rounded-t-xl"></div>
 
                     {error && (
                         <div className="mb-6 bg-error/10 border border-error/30 text-error px-4 py-3 rounded-lg text-sm">
@@ -389,21 +390,31 @@ const AddProperty = () => {
                                 </div>
                                 <div className="flex flex-col">
                                     <label className="label-luxury" htmlFor="purpose">Listing Type *</label>
-                                    <select id="purpose" value={formData.purpose} onChange={handleInputChange} className="w-full input-luxury">
-                                        <option value="BUY">For Sale</option>
-                                        <option value="RENT">For Rent</option>
-                                    </select>
+                                    <CustomSelect
+                                        id="purpose"
+                                        value={formData.purpose}
+                                        onChange={handleInputChange}
+                                        options={[
+                                            { value: 'BUY', label: 'For Sale' },
+                                            { value: 'RENT', label: 'For Rent' }
+                                        ]}
+                                    />
                                 </div>
                                 <div className="flex flex-col">
                                     <label className="label-luxury" htmlFor="type">Property Category *</label>
-                                    <select id="type" value={formData.type} onChange={handleInputChange} className="w-full input-luxury">
-                                        <option value="APARTMENT">Apartment</option>
-                                        <option value="HOUSE">House</option>
-                                        <option value="VILLA">Villa</option>
-                                        <option value="COMMERCIAL">Commercial</option>
-                                        <option value="SHOP">Shop</option>
-                                        <option value="LAND">Land</option>
-                                    </select>
+                                    <CustomSelect
+                                        id="type"
+                                        value={formData.type}
+                                        onChange={handleInputChange}
+                                        options={[
+                                            { value: 'APARTMENT', label: 'Apartment' },
+                                            { value: 'HOUSE', label: 'House' },
+                                            { value: 'VILLA', label: 'Villa' },
+                                            { value: 'COMMERCIAL', label: 'Commercial' },
+                                            { value: 'SHOP', label: 'Shop' },
+                                            { value: 'LAND', label: 'Land' }
+                                        ]}
+                                    />
                                 </div>
                                 <div className="flex flex-col">
                                     <label className="label-luxury" htmlFor="price">
@@ -525,10 +536,15 @@ const AddProperty = () => {
                                     </div>
                                     <div>
                                         <label className="label-luxury" htmlFor="roadAccess">Direct Road Access?</label>
-                                        <select id="roadAccess" value={formData.roadAccess} onChange={handleInputChange} className="w-full input-luxury">
-                                            <option value="Yes">Yes</option>
-                                            <option value="No">No</option>
-                                        </select>
+                                        <CustomSelect
+                                            id="roadAccess"
+                                            value={formData.roadAccess}
+                                            onChange={handleInputChange}
+                                            options={[
+                                                { value: 'Yes', label: 'Yes' },
+                                                { value: 'No', label: 'No' }
+                                            ]}
+                                        />
                                     </div>
                                 </div>
                             )}
@@ -549,21 +565,31 @@ const AddProperty = () => {
                                         </div>
                                         <div>
                                             <label className="label-luxury" htmlFor="furnishingStatus">Furnishing Status</label>
-                                            <select id="furnishingStatus" value={formData.furnishingStatus} onChange={handleInputChange} className="w-full input-luxury">
-                                                <option value="Unfurnished">Unfurnished</option>
-                                                <option value="Semi-Furnished">Semi-Furnished</option>
-                                                <option value="Fully Furnished">Fully Furnished</option>
-                                            </select>
+                                            <CustomSelect
+                                                id="furnishingStatus"
+                                                value={formData.furnishingStatus}
+                                                onChange={handleInputChange}
+                                                options={[
+                                                    { value: 'Unfurnished', label: 'Unfurnished' },
+                                                    { value: 'Semi-Furnished', label: 'Semi-Furnished' },
+                                                    { value: 'Fully Furnished', label: 'Fully Furnished' }
+                                                ]}
+                                            />
                                         </div>
                                     </>
                                 )}
                                 <div>
                                     <label className="label-luxury" htmlFor="ownershipType">Ownership Type</label>
-                                    <select id="ownershipType" value={formData.ownershipType} onChange={handleInputChange} className="w-full input-luxury">
-                                        <option value="Freehold">Freehold</option>
-                                        <option value="Leasehold">Leasehold</option>
-                                        <option value="Cooperative">Cooperative</option>
-                                    </select>
+                                    <CustomSelect
+                                        id="ownershipType"
+                                        value={formData.ownershipType}
+                                        onChange={handleInputChange}
+                                        options={[
+                                            { value: 'Freehold', label: 'Freehold' },
+                                            { value: 'Leasehold', label: 'Leasehold' },
+                                            { value: 'Cooperative', label: 'Cooperative' }
+                                        ]}
+                                    />
                                 </div>
                                 <div>
                                     <label className="label-luxury" htmlFor="availabilityDate">Availability Date</label>

@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
             try {
                 const decoded = jwtDecode(token);
                 const roles = storedRoles ? JSON.parse(storedRoles) : [];
-                setUser({ token, roles, ...decoded });
+                setUser({ ...decoded, token, roles });
             } catch (err) {
                 console.error("Invalid token on startup", err);
                 sessionStorage.removeItem('token');
@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
         sessionStorage.setItem('token', token);
         sessionStorage.setItem('roles', JSON.stringify(roles || []));
         const decoded = jwtDecode(token);
-        setUser({ token, roles: roles || [], ...decoded });
+        setUser({ ...decoded, token, roles: roles || [] });
     };
 
     const logout = () => {
