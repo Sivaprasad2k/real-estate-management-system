@@ -139,7 +139,7 @@ public class PropertyService {
 
     public List<Property> advancedSearch(PropertySearchRequest request) {
         Query query = new Query();
-        query.addCriteria(Criteria.where("status").in(com.rems.realestate.model.PropertyStatus.APPROVED, com.rems.realestate.model.PropertyStatus.SOLD, com.rems.realestate.model.PropertyStatus.RENTED));
+        query.addCriteria(Criteria.where("status").in(com.rems.realestate.model.PropertyStatus.APPROVED, com.rems.realestate.model.PropertyStatus.AVAILABLE, com.rems.realestate.model.PropertyStatus.SOLD, com.rems.realestate.model.PropertyStatus.RENTED));
 
         if (request.getKeyword() != null && !request.getKeyword().isEmpty()) {
             Criteria keywordCriteria = new Criteria().orOperator(
@@ -382,7 +382,7 @@ public class PropertyService {
         Point point = new Point(longitude, latitude);
         Distance distance = new Distance(distanceKm, Metrics.KILOMETERS);
         return propertyRepository.findByLocationNear(point, distance).stream()
-                .filter(p -> p.getStatus() == PropertyStatus.APPROVED || p.getStatus() == PropertyStatus.SOLD || p.getStatus() == PropertyStatus.RENTED)
+                .filter(p -> p.getStatus() == PropertyStatus.APPROVED || p.getStatus() == PropertyStatus.AVAILABLE || p.getStatus() == PropertyStatus.SOLD || p.getStatus() == PropertyStatus.RENTED)
                 .toList();
     }
 
