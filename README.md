@@ -352,5 +352,5 @@ The system uses a cloud deployment architecture:
 
 ## Author
 
-**Siva Prasad M L**
-**Ritharaj**
+ ||**Siva Prasad M L** |
+|**Ritharaj**||
