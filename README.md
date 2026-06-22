@@ -208,22 +208,25 @@ graph TD
 ## Screenshots
 
 ### Landing Page
-`[Markdown Placeholder: Landing Page Screenshot - Features search bar, geospatial query field, and featured listings cards]`
+         <img width="1863" height="796" alt="image" src="https://github.com/user-attachments/assets/205becd2-8dab-47a4-bff5-4b2b9b66ccc0" />
 
 ### User Dashboard
-`[Markdown Placeholder: User Dashboard Screenshot - Displays user role options, active listings, transaction metrics, and navigation sidebar]`
+         <img width="1883" height="889" alt="image" src="https://github.com/user-attachments/assets/4f3978a7-5b63-41a7-a692-b10320862b1e" />
 
 ### Marketplace
-`[Markdown Placeholder: Marketplace Grid Screenshot - Displays search filter controls and results in a clean grid view]`
+         <img width="1877" height="909" alt="image" src="https://github.com/user-attachments/assets/6c2529c4-8d9d-4e9a-9468-30755a26239e" />
 
 ### Property Details
-`[Markdown Placeholder: Property Details Page Screenshot - Displays specifications, location coordinates map, action buttons, rules, and image carousel]`
+         <img width="1884" height="921" alt="image" src="https://github.com/user-attachments/assets/c8d5093e-8f7d-4895-ad13-258b6d68fef5" />
 
 ### Chat System
-`[Markdown Placeholder: Chat Interface Screenshot - Features left navigation panel for active conversations, right messaging log, and real-time typing indicator]`
+         <img width="1866" height="817" alt="image" src="https://github.com/user-attachments/assets/b9187688-4054-4667-8c19-fedfa4be05e7" />
 
 ### Mobile Experience
-`[Markdown Placeholder: Mobile View Screenshot - Demonstrates responsive layout wrapping navigation, cards, and dashboards for mobile viewports]`
+         /9j/4AAQSkZJRgABAQAAAQABAAD/2wCEABsbGxscGx4hIR4qLSgtKj04MzM4PV1CR0JHQl2NWGdYWGdYjX2Xe3N7l33gsJycsOD/2c7Z//////////////8BGxsbGxwbHiEhHiotKC0qPTgzMzg9XUJHQkdCXY1YZ1hYZ1iNfZd7c3uXfeCwnJyw4P/Zztn////////////////CABEIAEgAHwMBIgACEQEDEQH/xAAuAAEAAwEBAAAAAAAAAAAAAAAAAQIDBQQBAQEBAQAAAAAAAAAAAAAAAAABAwT/2gAMAwEAAhADEAAAAOHalE2pnJElqJFqzAB6rdTXmnDp2Mdr7xQV/8QAJhAAAQQABAUFAAAAAAAAAAAAAQACAxEEECExBRMVM1EUIEJhcf/aAAgBAQABPwBtEUSAhHGd5AE2maghOdpWia9rfjaB3yvSstPfTnD8yJJyF+FR3pUatEEbhNw85YCwWCvS4igKTsPMxwbSkjmAt4NBQSsETR9LnM8p0jRMw2sU4mF4XQpQO8jwSQDurokm/NR4FIQblX//xAAcEQABAwUAAAAAAAAAAAAAAAABAAIREBITICH/2gAIAQIBAT8A2z9i0pr5AUCn/8QAGREAAQUAAAAAAAAAAAAAAAAAAAEQESAh/9oACAEDAQE/ALSar//Z
+
+/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEABsbGxscGx4hIR4qLSgtKj04MzM4PV1CR0JHQl2NWGdYWGdYjX2Xe3N7l33gsJycsOD/2c7Z//////////////8BGxsbGxwbHiEhHiotKC0qPTgzMzg9XUJHQkdCXY1YZ1hYZ1iNfZd7c3uXfeCwnJyw4P/Zztn////////////////CABEIAEgAHwMBIgACEQEDEQH/xAAtAAEAAwEBAQAAAAAAAAAAAAAAAQIDBQQGAQEBAAAAAAAAAAAAAAAAAAAAAf/aAAwDAQACEAMQAAAA4dOl5TCbDXPNCIVaaKvQCRCan0ogD//EACgQAQACAQIEBAcAAAAAAAAAAAEAAhESIQMxUVIQExZhBAUVICJBU//aAAgBAQABPwChq2UJg33lbtHIRsteRPhDg+VquDON5Wu+Nuka1AdUvcagBODTh2otsy3Dr3nONU9zrHGIatt41evhiCaeU/D3i0E0x+0FiYmI4hbDLJ+o2Ux4en7f0j8ge+fQHvnp+3fP/8QAFxEAAwEAAAAAAAAAAAAAAAAAEDAxQf/aAAgBAgEBPwAbUf/EABQRAQAAAAAAAAAAAAAAAAAAADD/2gAIAQMBAT8AL//Z
+
 
 ---
 
