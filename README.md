@@ -353,5 +353,4 @@ The system uses a cloud deployment architecture:
 ## Author
 
 **Siva Prasad M L**
-* GitHub: [Sivaprasad2k](https://github.com/Sivaprasad2k)
-* LinkedIn: [Siva Prasad M L](https://linkedin.com/in/sivaprasadml)
+**Ritharaj**
